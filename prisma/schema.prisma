@@ -1,0 +1,1153 @@
+// HelpDesk — shema baze
+// Vsi dostopi gredo skozi Prisma Client (parametrizirane poizvedbe).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String  @id @default(cuid())
+  username       String  @unique
+  name           String
+  passwordHash   String
+  /// 1 = prvi nivo, 2 = drugi, 3 = tretji … Admin ni vezan na nivo.
+  level          Int     @default(1)
+  isAdmin        Boolean @default(false)
+  active         Boolean @default(true)
+  /// Uporabnik si mora ob prvi prijavi zamenjati geslo.
+  mustChangePw   Boolean @default(false)
+  color          String  @default("#0071e3")
+  /// Jezik uporabniškega vmesnika. Novi računi so privzeto v angleščini.
+  locale         String  @default("en")
+  email          String?
+  notifyEmail    Boolean @default(true)
+  /// Zunanji vnos je vnos nekoga, ki naročila nima prevzetega. Kdor jih po
+  /// pošti noče, jih še vedno dobi v zvoncu — enako kot pri pragu.
+  notifyOutsider Boolean @default(true)
+  /// Prag za e-pošto: obvestilo po pošti gre samo za naročila S TO ALI VIŠJO
+  /// prioriteto (urgent | high | medium | low). "low" pomeni vse, kar ohranja
+  /// dotedanje vedenje. Obvestilo v aplikaciji (zvonec) prag ne zadeva —
+  /// tiho izginulo obvestilo bi bilo hujše od preveč pošte.
+  notifyPriority String  @default("low")
+  notifyDigest   Boolean @default(true)
+  /// Katera obvestila dobi in kako: JSON {vrsta: "off"|"bell"|"mail"}
+  /// (lib/notify-prefs.ts). Null: veljata notifyEmail in notifyOutsider.
+  notifyKinds    String?
+  /// Izgled vmesnika iz profila: JSON samo z odstopanji od privzetega
+  /// ({ scheme, mode, textSize, font, grid, reduceMotion }) — lib/appearance.ts.
+  appearance     String  @default("{}")
+  /// Področja strani »Urejanje«, ki jih sme urejati tudi ne-admin, ločena z
+  /// vejico: "warehouse,products,languages,rules,satisfaction" (lib/permissions.ts). Admin
+  /// ima vsa brez zapisa.
+  permissions    String  @default("")
+
+  createdAt DateTime  @default(now())
+  lastLogin DateTime?
+
+  sessions             Session[]
+  assigned             Issue[]              @relation("assignee")
+  reported             Issue[]              @relation("reporter")
+  events               Event[]
+  notifications        Notification[]
+  shipgReturnsCreated  ShipgReturn[]        @relation("shipgCreatedBy")
+  shipgReturnsVerified ShipgReturn[]        @relation("shipgVerifiedBy")
+  draftsCreated        CustomerEmailDraft[] @relation("draftCreatedBy")
+  eventRevisions       EventRevision[]      @relation("eventRevisionEditor")
+  draftsSent           CustomerEmailDraft[] @relation("draftSentBy")
+  shipgAllocations     ShipgAllocation[]    @relation("shipgReservedBy")
+  outboundOrders       OutboundOrder[]      @relation("outboundCreatedBy")
+  inboxAssigned        InboxConversation[]  @relation("inboxAssignee")
+  inboxSeen            InboxSeen[]
+  stars                IssueStar[]
+  processBranches      ProcessBranch[]      @relation("processBranchEditor")
+  processSteps         ProcessStep[]        @relation("processStepEditor")
+  exchangeRounds       ExchangeRound[]      @relation("exchangeRoundStartedBy")
+  supplierOrders       SupplierOrder[]      @relation("supplierOrderCreatedBy")
+  mailTemplates        MailTemplate[]       @relation("mailTemplateCreatedBy")
+  satisfactionReviews  SatisfactionScore[]  @relation("satisfactionReviewer")
+  manageLogs           ManageLog[]
+
+  @@index([active])
+}
+
+model Session {
+  id String @id @default(cuid())
+
+  /// V bazi je samo SHA-256 zgostitev žetona, nikoli žeton sam.
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  userAgent String?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Issue {
+  id  Int    @id @default(autoincrement())
+  key String @unique // BRV-1
+
+  /// Edino obvezno polje.
+  orderNumber    String
+  /// Normaliziran enolični ključ: brez začetnega # in presledkov, velike črke.
+  /// Nullable samo zaradi varnega backfilla obstoječih produkcijskih baz.
+  orderNumberKey String? @unique
+
+  type     String // refund | exchange | cancel | address | tracking | unfulfilled | quality | other
+  status   String @default("open") // open | waiting | manual | closed
+  priority String @default("medium") // low | medium | high | urgent
+
+  /// Nivo, ki naročilo trenutno obravnava. 0 = sistemska vrsta: ticket je odprl
+  /// Desk sam in ga človek še ni prevzel ali predal naprej.
+  level Int @default(1)
+
+  /// Kdo je ticket odprl: person = človek | system = Desk sam (preverjen mail).
+  source String @default("person")
+
+  title String?
+
+  customerName        String?
+  customerEmail       String?
+  customerPhone       String?
+  /// Dostavni naslov v eni vrstici, kakor ga vrne Shopify.
+  customerAddress     String?
+  /// ISO 3166-1 alpha-2 koda ciljne države; ShipGerman je dovoljen samo za AT/CH.
+  customerCountryCode String?
+  amount              Float?
+  currency            String  @default("EUR")
+  /// Način plačila, kot ga vrne uspešna Shopify transakcija.
+  paymentMethod       String?
+  paymentBrand        String? // klarna | mastercard | visa | null
+  paymentLast4        String?
+
+  /// Zastarelo: en artikel na naročilo. Nadomestil ga je IssueItem.
+  /// Stolpci ostajajo, dokler prenos starih vrstic ni izveden povsod
+  /// (prisma/backfill-items.mjs). Aplikacija jih ne bere več.
+  itemName String?
+  itemSize String?
+  itemQty  Int?
+
+  returnTracking      String?
+  replacementTracking String?
+
+  /// Krog menjave, ki trenutno teče (1 = prva menjava). Postavke vedno kažejo
+  /// tekoči krog: `variant` je kos, ki ga ima stranka zdaj, `replacementVariant`
+  /// kos, ki ga želi. Kako so se končali prejšnji krogi, hrani ExchangeRound.
+  exchangeRound Int     @default(1)
+  /// Zakaj teče tekoči krog, kadar ni prvi: ours = napaka pri nas, stranka kos
+  /// obdrži | customer = stranka kos vrne kot prvič in sama plača menjavo.
+  exchangeFault String?
+
+  /// Stanje naročila pri Shopifyju, kakor smo ga nazadnje videli. Shopify je
+  /// vir resnice; tu je le odtis, da ga vidi seznam in da dnevno preverjanje
+  /// ve, kaj se je spremenilo. Vrednosti so Shopifyjeve (PAID, UNFULFILLED …),
+  /// razen DELIVERED, ki ga preberemo iz same pošiljke.
+  shopifyFinancial       String?
+  shopifyFulfillment     String?
+  shopifyStatusAt        DateTime?
+  /// Shopify je javil neuspešno dostavo (Failed delivery). Preverimo ob odprtju
+  /// ticketa; ko se dostava popravi, se polji izpraznita.
+  deliveryFailedAt       DateTime?
+  deliveryFailedTracking String?
+
+  orderPlacedAt     DateTime?
+  /// Pri statusu "waiting": do kdaj čakamo.
+  waitingUntil      DateTime?
+  /// Pri statusu "waiting": čakamo na odgovor stranke. Hrani trenutek, od
+  /// katerega naprej šteje prispela pošta — starejša sporočila ticketa ne
+  /// zbudijo. Null pomeni, da na odgovor ne čakamo.
+  waitingReplySince DateTime?
+
+  assigneeId String?
+  assignee   User?   @relation("assignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  reporterId String?
+  reporter   User?   @relation("reporter", fields: [reporterId], references: [id], onDelete: SetNull)
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  closedAt   DateTime?
+  archivedAt DateTime?
+
+  items              IssueItem[]
+  parcels            Parcel[]
+  events             Event[]
+  attachments        Attachment[]
+  notifications      Notification[]
+  satisfaction       SatisfactionScore?
+  emailDrafts        CustomerEmailDraft[]
+  inboxConversations InboxConversation[]
+  stars              IssueStar[]
+  shipgReturns       ShipgReturn[]
+  shipgAllocations   ShipgAllocation[]    @relation("shipgExchangeIssue")
+  exchangeRounds     ExchangeRound[]
+  supplierOrders     SupplierOrder[]
+  stockAlerts        ExchangeStockAlert[]
+
+  @@index([status])
+  @@index([orderNumber])
+  @@index([assigneeId])
+  @@index([level])
+}
+
+/// Gmail nit, ki je zanesljivo povezana z obstoječim ticketom. Gmail ostaja
+/// vir vsebine; tu hranimo le stanje delovne vrste, dodelitev in zadnji odtis.
+model InboxConversation {
+  id             String      @id @default(cuid())
+  gmailThreadId  String      @unique
+  /// Null: Desk za mail ni mogel najti ali odpreti ticketa. Pogovor stoji v
+  /// pogledu »Brez ticketa«, dokler ga človek ne poveže z naročilom.
+  issueId        Int?
+  issue          Issue?      @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  /// Zakaj ticket ni nastal: no_order | many_orders | many_tickets |
+  /// order_not_found | email_mismatch. Null pri povezanem pogovoru.
+  unlinkedReason String?
+  subject        String
+  customerEmail  String
+  customerName   String?
+  lastMessageId  String
+  lastMessageAt  DateTime
+  lastSnippet    String?
+  lastDirection  String
+  /// Vseh sporočil v Gmail niti (naša in strankina). Null: pogovor je iz časa
+  /// pred štetjem in še čaka, da ga sinhronizacija prešteje.
+  messageCount   Int?
+  status         String      @default("open") // open | waiting | done
+  assigneeId     String?
+  assignee       User?       @relation("inboxAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  seenBy         InboxSeen[]
+
+  @@index([status, lastMessageAt])
+  @@index([assigneeId, status])
+  @@index([issueId])
+}
+
+/// Zvezdica: osebna oznaka ticketa. Vsak uporabnik ima svoje, drugi jih ne vidijo.
+model IssueStar {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  issueId   Int
+  issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, issueId])
+  @@index([issueId])
+}
+
+model InboxSeen {
+  conversationId String
+  conversation   InboxConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  seenMessageId  String
+  seenAt         DateTime          @default(now())
+
+  @@id([conversationId, userId])
+  @@index([userId, seenAt])
+}
+
+/// Kazalec zadnje uspešne inkrementalne Gmail sinhronizacije. Prekrivanje med
+/// obhodoma poskrbi, da sporočilo na časovni meji ne more izginiti.
+model InboxSyncState {
+  id           String    @id
+  lastSyncedAt DateTime?
+  lastError    String?
+  updatedAt    DateTime  @updatedAt
+}
+
+/// Postavka naročila. Naročilo jih ima lahko več, težava pa se pogosto tiče
+/// samo ene — zato ima vsaka svojo rešitev (vračilo, zamenjava, brez ukrepa).
+model IssueItem {
+  id      Int   @id @default(autoincrement())
+  issueId Int
+  issue   Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  name               String
+  /// Varianta iz Shopifyja: velikost, barva … ("Nero / M / EU 46 / W30").
+  variant            String?
+  /// Želena različica pri menjavi; izvirna `variant` ostane to, kar se vrača.
+  replacementVariant String?
+  /// Želen DRUG izdelek pri menjavi (hlače → jeans). Null pomeni menjavo znotraj
+  /// istega izdelka, kar je daleč najpogostejše — takrat velja `name`.
+  replacementName    String?
+  /// Razlika v ceni menjave v drug izdelek je urejena (doplačano ali vrnjeno).
+  /// Dokler ni, menjave ni mogoče rezervirati iz ShipGerman zaloge.
+  priceDiffSettled   Boolean @default(false)
+  /// Skladišče je poslalo drug kos od naročenega. `name`/`variant` sta takrat
+  /// kos, ki ga ima stranka (in ga bo vrnila), tu pa je, kaj je naročila.
+  wrongItemSent      Boolean @default(false)
+  orderedName        String?
+  orderedVariant     String?
+  qty                Int     @default(1)
+  /// Znesek te postavke. Pri delnih vračilih je to znesek, ki se povrne.
+  amount             Float?
+
+  /// refund | exchange | none — glej ITEM_RESOLUTIONS v src/lib/domain.ts.
+  resolution String @default("refund")
+
+  /// Vrstni red v naročilu, kakor ga vrne Shopify.
+  position Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  shipgItems ShipgReturnItem[]
+
+  @@index([issueId])
+  @@index([name])
+}
+
+/// Pošiljka, ki jo za naročilo spremljamo. Naročilo jih ima lahko več —
+/// vrnjen artikel in poslana zamenjava sta dve ločeni poti.
+model Parcel {
+  id      Int   @id @default(autoincrement())
+  issueId Int
+  issue   Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  number        String
+  /// return = stranka vrača k nam | replacement = mi pošiljamo stranki
+  direction     String @default("return")
+  /// Krog menjave, v katerem je pošiljka nastala. Paket iz prvega kroga, ki
+  /// prispe pozno, mora v registru pričakovati kose prvega kroga.
+  exchangeRound Int    @default(1)
+
+  /// Številka prevoznika po šifrantu 17TRACK in njegovo ime za prikaz.
+  carrier     Int?
+  carrierName String?
+
+  /// Naše stanje, ne dobaviteljevo: pending | transit | arrived | manual | untracked
+  /// Glej PARCEL_STATES in parcelOutcome v src/lib/domain.ts.
+  state          String  @default("pending")
+  /// Surov status ponudnika (Delivered, InTransit, Exception …) za sled.
+  providerStatus String?
+  /// Zakaj je pošiljka pristala v ročni obravnavi.
+  manualReason   String?
+
+  lastEventAt   DateTime?
+  lastEventText String?
+
+  /// Kdaj smo nazadnje vprašali ponudnika in kdaj je bila registrirana.
+  checkedAt    DateTime?
+  registeredAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shipgReturn   ShipgReturn?
+  supplierOrder SupplierOrder?
+
+  /// Iste številke pri istem naročilu ne spremljamo dvakrat.
+  @@unique([issueId, number])
+  @@index([number])
+  @@index([state])
+}
+
+/// Fizično vračilo, ki ga pričakujemo ali smo ga preverili v skladišču ShipG.
+/// Podatki naročila so namenoma posnetek: zgodovina ostane pravilna tudi, če
+/// nekdo pozneje preimenuje stranko ali postavko v helpdesku.
+model ShipgReturn {
+  id Int @id @default(autoincrement())
+
+  issueId Int?
+  issue   Issue? @relation(fields: [issueId], references: [id], onDelete: SetNull)
+
+  parcelId Int?    @unique
+  parcel   Parcel? @relation(fields: [parcelId], references: [id], onDelete: SetNull)
+
+  orderNumber    String
+  customerName   String?
+  trackingNumber String?
+
+  /// Trajna povezava na dejanski paket v ShipGerman računu. En fizični paket
+  /// lahko pripada samo enemu zapisu naše zaloge.
+  shipgermanParcelId    String?   @unique
+  /// automatic | manual
+  shipgermanMatchSource String?
+  shipgermanLinkedAt    DateTime?
+
+  /// Kako gotovi smo, da ta fizični paket res pripada temu naročilu:
+  /// high | medium | low. Odpremiti je mogoče samo "high" — pri nižji gotovosti
+  /// bi stranka lahko dobila tuj kos. Obstoječi zapisi so ob uvedbi dobili
+  /// "high", ker so nastali po pravilih, ki dvoma niso dopuščala.
+  matchQuality String @default("high")
+
+  /// expected | check | stocked | exception
+  status String  @default("expected")
+  notes  String?
+
+  /// Krog menjave naročila, iz katerega paket prihaja. Dva zapisa istega
+  /// naročila v različnih krogih sta dva fizična paketa, ne podvojitev.
+  exchangeRound Int @default(1)
+
+  receivedAt DateTime?
+  stockedAt  DateTime?
+
+  createdById  String?
+  createdBy    User?   @relation("shipgCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  verifiedById String?
+  verifiedBy   User?   @relation("shipgVerifiedBy", fields: [verifiedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items      ShipgReturnItem[]
+  allocation ShipgAllocation?
+
+  @@index([status, updatedAt])
+  @@index([orderNumber])
+  @@index([issueId])
+  @@index([trackingNumber])
+}
+
+model ShipgReturnItem {
+  id            Int         @id @default(autoincrement())
+  shipgReturnId Int
+  shipgReturn   ShipgReturn @relation(fields: [shipgReturnId], references: [id], onDelete: Cascade)
+
+  issueItemId Int?
+  issueItem   IssueItem? @relation(fields: [issueItemId], references: [id], onDelete: SetNull)
+
+  name        String
+  variant     String?
+  expectedQty Int     @default(1)
+  receivedQty Int     @default(0)
+  /// pending | good | damaged | missing | wrong
+  condition   String  @default("pending")
+  note        String?
+  position    Int     @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([shipgReturnId])
+  @@index([issueItemId])
+}
+
+/// Aktivna rezervacija nedeljivega ShipGerman paketa. Vezana je bodisi na
+/// menjavo (`exchangeIssue`) bodisi na odpremo nefulfillanega naročila
+/// (`outboundOrder`) — natanko eno od obeh. `shipgReturnId @unique` zagotavlja,
+/// da istega fizičnega paketa ni mogoče istočasno obljubiti dvema strankama,
+/// ne glede na to, po kateri poti. Ob preklicu se vrstica izbriše.
+model ShipgAllocation {
+  id Int @id @default(autoincrement())
+
+  shipgReturnId Int         @unique
+  shipgReturn   ShipgReturn @relation(fields: [shipgReturnId], references: [id], onDelete: Cascade)
+
+  /// Menjava (obstoječi ticket). Null, kadar gre za odpremo novega naročila.
+  exchangeIssueId Int?
+  exchangeIssue   Issue? @relation("shipgExchangeIssue", fields: [exchangeIssueId], references: [id], onDelete: Cascade)
+
+  /// Odprema nefulfillanega naročila. Null, kadar gre za menjavo.
+  outboundOrderId String?
+  outboundOrder   OutboundOrder? @relation(fields: [outboundOrderId], references: [id], onDelete: Cascade)
+
+  /// ShipGermanov ID dejanskega paketa ob rezervaciji.
+  externalParcelId String
+  /// reserved | dispatching | shipped
+  status           String @default("reserved")
+  /// Krog menjave, za katerega je paket rezerviran. Odposlan paket prejšnjega
+  /// kroga je zgodovina in nove rezervacije ne zaklene.
+  exchangeRound    Int    @default(1)
+
+  reservedById String?
+  reservedBy   User?   @relation("shipgReservedBy", fields: [reservedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([exchangeIssueId, status])
+  @@index([outboundOrderId, status])
+  @@index([externalParcelId])
+}
+
+/// Začetek novega kroga menjave pri istem naročilu — stranka je dobila
+/// nadomestek in želi menjati znova. Ob začetku zapišemo, kako se je prejšnji
+/// krog končal, saj postavke naročila od tu naprej kažejo nov krog.
+model ExchangeRound {
+  id Int @id @default(autoincrement())
+
+  issueId Int
+  issue   Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  /// Krog, ki se je s tem zapisom začel (2, 3 …).
+  number   Int
+  /// ours = napaka pri nas, stranka kos obdrži | customer = stranka kos vrne in sama plača menjavo
+  fault    String
+  /// Postavke prejšnjega kroga ob zaključku (JSON): kaj je stranka imela in kaj je dobila.
+  previous String
+  note     String?
+
+  startedById String?
+  startedBy   User?   @relation("exchangeRoundStartedBy", fields: [startedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@unique([issueId, number])
+}
+
+/// Nadomestek, ki ga stranki pošlje dobavitelj, ker ga v ShipG zalogi ni.
+/// Naslov in kosi so posnetek ob naročilu: dobavitelj mora dobiti natanko to,
+/// kar je bilo naročeno, tudi če se ticket pozneje spremeni. Ključ za
+/// povezavo nazaj (uvoz trackinga iz Excela) je `id`, v datoteki "SUP-<id>" —
+/// številka naročila ne zadošča, ker ima lahko isto naročilo več krogov.
+model SupplierOrder {
+  id Int @id @default(autoincrement())
+
+  issueId       Int
+  issue         Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  exchangeRound Int   @default(1)
+
+  /// open | exported | shipped | cancelled
+  status String @default("open")
+
+  /// JSON [{ qty, name, variant }] — kar mora dobavitelj poslati.
+  items String
+
+  recipient   String?
+  company     String?
+  address1    String?
+  address2    String?
+  zip         String?
+  city        String?
+  province    String?
+  country     String?
+  countryCode String?
+  phone       String?
+  email       String?
+  note        String?
+
+  /// Tracking, kakor ga je vrnil dobavitelj (več številk ločenih z vejico).
+  tracking String?
+  carrier  String?
+  /// Prva pošiljka, ki smo jo iz trackinga odprli na ticketu.
+  parcelId Int?    @unique
+  parcel   Parcel? @relation(fields: [parcelId], references: [id], onDelete: SetNull)
+
+  /// Kdaj je vrstica prvič šla v izvoz in kdaj je prišel tracking.
+  exportedAt DateTime?
+  shippedAt  DateTime?
+  /// Kdo je tracking vnesel: ime zaposlenega ali "portal".
+  shippedBy  String?
+
+  createdById String?
+  createdBy   User?   @relation("supplierOrderCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([issueId])
+}
+
+/// Obvestilo je šlo ven: v zalogi je paket, ki natanko pokrije menjavo tega
+/// ticketa. En zapis na ticket, krog in nabor paketov, da urnik in vpis paketa
+/// iste priložnosti ne javita dvakrat.
+model ExchangeStockAlert {
+  id            Int    @id @default(autoincrement())
+  issueId       Int
+  issue         Issue  @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  exchangeRound Int
+  /// ID-ji naših zapisov zaloge, urejeni in združeni z vejico.
+  returnIds     String
+
+  sentAt DateTime @default(now())
+
+  @@unique([issueId, exchangeRound, returnIds])
+}
+
+/// Nefulfillano Shopify naročilo, ki ga odpremljamo iz ShipGerman zaloge.
+/// Obstaja od trenutka, ko rezerviramo paket, do zaključka (fulfillment v
+/// Shopifyju). Dokler ni fulfillan, naročilo ostane med kandidati za odpremo.
+model OutboundOrder {
+  id String @id @default(cuid())
+
+  /// Shopify GID naročila (gid://shopify/Order/…) — enolično.
+  shopifyOrderId String @unique
+  /// Berljiva številka naročila (#1140 → "1140").
+  orderNumber    String
+
+  /// Posnetek ob prevzemu; živ prikaz vseeno beremo iz Shopifyja.
+  customerName        String?
+  customerEmail       String?
+  customerCountryCode String?
+
+  /// reserved | dispatching | shipped | fulfilled | cancelled
+  status String @default("reserved")
+
+  /// Odhodni ShipGerman tracking, ko se pojavi (scrape). Vpisan v Shopify ob fulfillmentu.
+  tracking     String?
+  trackingLink String?
+
+  /// Shopify fulfillment GID in čas, ko je bil ustvarjen (in poslan mail stranki).
+  fulfillmentId String?
+  fulfilledAt   DateTime?
+
+  createdById String?
+  createdBy   User?   @relation("outboundCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  allocations ShipgAllocation[]
+
+  @@index([status])
+}
+
+/// Zadnji uspešno prebrani posnetek paketa iz ShipGerman. Uporabniški pogledi
+/// berejo samo to tabelo in zato nikoli ne čakajo na zunanji API.
+model ShipGermanCachedParcel {
+  id String @id
+
+  arrivalDate    DateTime
+  barcode        String
+  carrier        String
+  lengthMm       Int
+  widthMm        Int
+  heightMm       Int
+  sender         String
+  trackingNumber String?
+  weightGrams    Int
+  location       String
+  labelAvailable Boolean  @default(false)
+
+  /// Ročna oznaka: fizični paket, za katerega ne vemo, kaj je v njem.
+  /// Sinhronizacija je ne prepisuje, zato preživi samodejno osveževanje zaloge.
+  unidentifiable Boolean @default(false)
+
+  active      Boolean  @default(true)
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime
+  updatedAt   DateTime @updatedAt
+
+  @@index([active, arrivalDate])
+  @@index([trackingNumber])
+  @@index([sender])
+  @@index([unidentifiable])
+}
+
+/// Zadnji posnetek ODPOSLANE pošiljke iz ShipGerman (/user/shipments). Vir za
+/// zavihek Odposlano. Vežemo prek `parcelId` na naš ShipgAllocation.externalParcelId.
+/// Pošiljke, poslane pred obstojem sistema, nimajo alokacije — v prikazu označene.
+model ShipGermanCachedShipment {
+  id String @id
+
+  /// ID fizičnega paketa v pošiljki (vezni ključ na alokacijo/zalogo).
+  parcelId String?
+
+  /// Shipped | ReadyForProcessing | …
+  status String
+
+  actualShipDate  DateTime?
+  plannedShipDate DateTime?
+
+  /// Odhodni tracking (FedEx) in povezava do sledenja.
+  tracking     String?
+  trackingLink String?
+  /// Berljiva oznaka metode (npr. "FedEx Regional Economy").
+  shipMethod   String?
+
+  /// Cena pošiljke in valuta.
+  price    Float?
+  currency String @default("EUR")
+
+  /// Pošiljatelj paketa (iz vezanega zapisa paketa).
+  sender           String?
+  invoiceAvailable Boolean @default(false)
+
+  /// Mere in teža odposlanega paketa ter carinski podatki, kakor jih vrne
+  /// ShipGerman. Hranimo jih zato, ker jih po odpremi ni več od kod dobiti:
+  /// paket zapusti zalogo in izgine iz seznama paketov.
+  weightGrams     Int?
+  lengthMm        Int?
+  widthMm         Int?
+  heightMm        Int?
+  insurance       Float?
+  incoterm        String?
+  /// "single" ali konsolidacija več paketov.
+  kind            String?
+  isEU            Boolean?
+  isVAT           Boolean?
+  isPickupPoint   Boolean?
+  isConsolidation Boolean?
+  /// Skladišče, iz katerega je paket odšel (npr. "MUC").
+  locations       String?
+  /// Dodatne tracking številke pri pošiljkah z več paketi.
+  altTrackings    String?
+
+  /// S čim je paket PRIŠEL v skladišče. Stranka sporoči prav to številko, ko
+  /// pove, da je poslala vračilo — zato je za iskanje pomembnejša od odhodne.
+  parcelTracking  String?
+  parcelCarrier   String?
+  parcelBarcode   String?
+  parcelArrival   DateTime?
+  /// Koliko dni je paket ležal v skladišču (ShipGermanov "dwell_time").
+  parcelDwellDays Int?
+  labelAvailable  Boolean   @default(false)
+
+  firstSeenAt DateTime @default(now())
+  fetchedAt   DateTime
+  updatedAt   DateTime @updatedAt
+
+  @@index([status, actualShipDate])
+  @@index([parcelId])
+  @@index([parcelTracking])
+}
+
+model ShipGermanSyncState {
+  key String @id
+
+  status    String    @default("never") // never | ok | error
+  fetchedAt DateTime?
+  error     String?
+  updatedAt DateTime  @updatedAt
+}
+
+model Notification {
+  id      Int    @id @default(autoincrement())
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Null pri obvestilih, ki ne pripadajo ticketu (odprema novega naročila).
+  issueId Int?
+  issue   Issue? @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  /// Številka Shopify naročila pri obvestilih o odpremi (ticketa nimajo).
+  outboundOrderNumber String?
+
+  /// handoff | outsider | parcel | outbound
+  kind      String
+  actorName String
+  preview   String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt, createdAt])
+  @@index([issueId])
+}
+
+model Event {
+  id      Int   @id @default(autoincrement())
+  issueId Int
+  issue   Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  /// created | comment | status | assign | field | parcel | system
+  kind String
+
+  body      String?
+  field     String?
+  fromValue String?
+  toValue   String?
+
+  /// true = vnos je naredil nekdo, ki naročila v tistem trenutku ni imel prevzetega.
+  outsider Boolean @default(false)
+
+  authorId String?
+  author   User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  /// Kdaj je avtor komentar nazadnje popravil. Null = nikoli.
+  editedAt  DateTime?
+
+  attachments Attachment[]
+  revisions   EventRevision[]
+
+  @@index([issueId, createdAt])
+}
+
+/// Prejšnja besedila popravljenega komentarja. Vsak popravek shrani besedilo,
+/// kakršno je bilo pred njim, zato je zgodovina celotna.
+model EventRevision {
+  id      Int   @id @default(autoincrement())
+  eventId Int
+  event   Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  body      String
+  /// Kdaj je bilo to besedilo napisano (prvi zapis ali prejšnji popravek).
+  writtenAt DateTime
+
+  editedById String?
+  editedBy   User?   @relation("eventRevisionEditor", fields: [editedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([eventId])
+}
+
+model Attachment {
+  id      Int   @id @default(autoincrement())
+  issueId Int
+  issue   Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  eventId Int?
+  event   Event? @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  /// Prikazno ime (očiščeno). Datoteka na disku ima naključno ime.
+  filename   String
+  storedName String
+  mime       String
+  size       Int
+
+  createdAt DateTime @default(now())
+
+  @@index([issueId])
+}
+
+/// Zadnja videna ujemanja paket↔naročilo iz seznama za odpremo. Obstaja samo
+/// zato, da ob osvežitvi lahko povemo, KATERA ujemanja so nova — brez posnetka
+/// je vsak predlog videti enako star in osvežitev ne more ničesar javiti.
+/// Ključ je naročilo, ne paket: isti kos lahko naslednjič pokrije drug paket,
+/// priložnost za odpremo pa je ista.
+model OutboundMatchSeen {
+  orderNumber String @id
+
+  /// ID-ji naših zapisov zaloge v predlaganem setu, urejeni in združeni z vejico.
+  /// Samo za sled — identiteta ujemanja je naročilo.
+  returnIds String
+
+  /// true = ujemanje se je pojavilo ob zadnji osvežitvi. Podlaga za oznako "novo".
+  fresh Boolean @default(true)
+
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime
+
+  @@index([fresh])
+}
+
+/// Osnutek odgovora STRANKI, ki ga sistem sestavi sam (ob odpremi nadomestka).
+/// Nikoli ne odide sam: obstaja kot zapis prav zato, da ga človek prebere, po
+/// potrebi popravi in šele nato pošlje. Zato tudi hrani celo besedilo — poslano
+/// mora ostati dokazljivo tako, kot je odšlo.
+model CustomerEmailDraft {
+  id Int @id @default(autoincrement())
+
+  /// One thank-you per case closure; also prevents concurrent duplicate sends.
+  satisfactionCloseKey String? @unique
+
+  issueId Int
+  issue   Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  /// exchangeShipped
+  kind String
+
+  /// draft | sent | discarded
+  status String @default("draft")
+
+  /// Jezik pisma (de | it | fr | en | sl) — predlagan iz države, zamenljiv.
+  language String
+
+  toEmail String
+  subject String
+  body    String
+
+  /// Gmail nit in Message-ID sporočila, na katerega odgovarjamo. Brez njiju bi
+  /// odgovor pri stranki odprl novo nit namesto da se pripne k pogovoru.
+  threadId  String?
+  inReplyTo String?
+
+  /// Gmail ID poslanega sporočila — dokaz, da je pismo res odšlo.
+  sentMessageId String?
+
+  createdById String?
+  createdBy   User?   @relation("draftCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  sentById    String?
+  sentBy      User?   @relation("draftSentBy", fields: [sentById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime  @default(now())
+  sentAt    DateTime?
+  updatedAt DateTime  @updatedAt
+
+  @@index([issueId, status])
+}
+
+/// Šifrant vrst tiketov in prioritet. Vgrajene vrednosti se ob prvem branju
+/// vpišejo iz kode; od tam naprej jih ureja admin. Ker se `key` zapiše v
+/// Issue.type oz. Issue.priority, se nikoli ne spreminja — preimenovanje
+/// zamenja samo `label`.
+model Category {
+  id String @id @default(cuid())
+
+  /// "type" (vrsta tiketa) ali "priority".
+  kind String
+  /// Vrednost v bazi tiketov. Nespremenljiva.
+  key  String
+
+  /// Ime, ki ga je vpisal admin. Brez njega velja prevod iz slovarja, ki ga
+  /// imajo samo vgrajene vrednosti — zato je prazno ime dovoljeno le pri njih.
+  label String?
+  /// Ime žetona iz DESIGN.md (npr. "stamp"). Uporabljajo ga prioritete; vrste
+  /// barve nimajo, ker jih nosi beseda.
+  color String?
+
+  position Int @default(0)
+
+  /// Skrita vrednost izgine iz izbirnikov in filtrov, obstoječi tiketi pa jo
+  /// obdržijo in se še naprej pravilno izpišejo. Brisanja ni namenoma.
+  hidden Boolean @default(false)
+
+  /// Ali je pri tej vrsti pred zaprtjem treba potrditi, da je paket nazaj.
+  /// Pri prioritetah nima pomena.
+  requiresReturn Boolean @default(false)
+
+  /// Ali dnevno preverjanje pri tej vrsti spremlja odpremo naročila: ko ga
+  /// Shopify odpremi, se to zapiše v nit in ticket se zbudi iz čakanja.
+  /// Zamenjav to ne sme zadevati — tam odpremo naredimo mi sami.
+  watchFulfillment Boolean @default(false)
+
+  /// Vgrajena vrednost ima prevod v slovarju in je ni mogoče izbrisati, le skriti.
+  builtin Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([kind, key])
+  @@index([kind, position])
+}
+
+/// Nastavitve, ki jih admin spremeni brez novega deployja (cene skladiščenja,
+/// časovna varovala trackinga). Privzete vrednosti ostanejo v kodi; v bazi je
+/// samo odstopanje od njih.
+/// Mail o redkem ujemanju je šel ven: novo naročilo natanko pokrije vrnjen
+/// paket z več kosi. En zapis na naročilo in set paketov, da webhook in urnik
+/// iste priložnosti ne javita dvakrat.
+model RareMatchAlert {
+  id          Int    @id @default(autoincrement())
+  orderNumber String
+  /// ID-ji naših zapisov zaloge, urejeni in združeni z vejico.
+  returnIds   String
+  /// Koliko ljudi je mail dobilo.
+  recipients  Int    @default(0)
+
+  sentAt DateTime @default(now())
+
+  @@unique([orderNumber, returnIds])
+}
+
+/// Predloga pisma, ki jo sestavi ekipa sama (Mail osnutki → Moje predloge).
+/// Deli si jo cela ekipa. Besedilo je sredina pisma — nagovor in podpis se
+/// dodata ob sestavljanju v jeziku stranke.
+model MailTemplate {
+  id       Int    @id @default(autoincrement())
+  name     String
+  /// JSON { "<jezik>": { "subject": "…", "body": "…" } }; "{order}" se zamenja s številko naročila.
+  texts    String
+  position Int    @default(0)
+
+  createdById String?
+  createdBy   User?   @relation("mailTemplateCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Ocena zadovoljstva stranke, ki jo AI da ob zaključku ticketa. Samo interno:
+/// nizka ocena pošlje ticket v pregled, stranka o njej ne izve ničesar.
+model SatisfactionScore {
+  id      Int   @id @default(autoincrement())
+  issueId Int   @unique
+  issue   Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  /// 1–10; null, kadar ocene ni bilo mogoče dati (stranka ni nič pisala).
+  score       Int?
+  reason      String   @default("")
+  /// scored | no_messages | failed
+  status      String
+  attempts    Int      @default(0)
+  /// closedAt ticketa, za katerega ocena velja. Ponovno odprt in zaprt ticket
+  /// ima nov closedAt in dobi novo oceno.
+  forClosedAt DateTime
+  model       String   @default("")
+
+  reviewedAt   DateTime?
+  reviewedById String?
+  reviewedBy   User?     @relation("satisfactionReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, score])
+}
+
+/// Kdo je kaj spremenil na strani »Urejanje« (izdelki, jeziki, pravila).
+/// Dogodki ticketov so vezani na ticket, te spremembe pa ne — zato svoj zapis.
+model ManageLog {
+  id     Int    @id @default(autoincrement())
+  /// warehouse | products | languages | rules | satisfaction
+  area   String
+  /// Kaj se je zgodilo, kot ključ ("group.create"); napis pride iz slovarja
+  /// (manage.log.<action>), da ga admin bere v svojem jeziku.
+  action String
+  /// Predmet spremembe, kakor je bil ob spremembi (ime skupine, izdelka, pravila).
+  detail String @default("")
+
+  authorId String?
+  author   User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model AppSetting {
+  key   String @id
+  value String
+
+  updatedAt DateTime @updatedAt
+}
+
+/// Izdelek trgovine, kakor ga vidi Desk. Vsebino (naziv, opcije, variante,
+/// slike) prinese Shopify; Desk doda samo jezik in skupino. Izdelek, ki ga v
+/// Shopifyju ni več, ostane — stara naročila in zaloga ga še vedno imenujejo.
+model CatalogProduct {
+  id        String  @id @default(cuid())
+  shopifyId String? @unique
+  handle    String  @unique
+  title     String
+  /// active | draft | archived (kakor v Shopifyju)
+  status    String  @default("active")
+  price     Float?
+  image     String?
+  /// JSON: [{ key, label, values[] }]
+  options   String  @default("[]")
+  /// JSON: [{ title, selection, image, price }]
+  variants  String  @default("[]")
+  /// Koda jezika trga (de, it, fr …). Zazna se iz imen opcij; admin jo lahko popravi.
+  language  String?
+
+  /// Skupina = isti fizični kos v različnih jezikih in trgih.
+  groupId   String?
+  group     ProductGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  /// JSON seznam skupin (ali "__new"), ki jih je admin za ta izdelek zavrnil kot predlog.
+  dismissed String        @default("[]")
+
+  /// Kdaj je izdelek izginil iz Shopifyja; null, dokler obstaja.
+  missingSince DateTime?
+  syncedAt     DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([groupId])
+  @@index([title])
+}
+
+/// Isti fizični kos pod več Shopify izdelki (npr. RoadGuard hlače v DE, IT, FR …).
+/// Ključ je stabilen, ker iz njega nastane kanonična identiteta kosa pri
+/// iskanju nadomestka in v pregledu zaloge.
+model ProductGroup {
+  id             String  @id @default(cuid())
+  key            String  @unique
+  label          String
+  /// Moški in ženski kroj sta isti fizični kos (spol se izpusti iz identitete).
+  genderAgnostic Boolean @default(false)
+  position       Int     @default(0)
+  /// JSON: nazivi, ki jih v Shopifyju ni več, a jih nosijo stara naročila in zaloga.
+  aliases        String  @default("[]")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products CatalogProduct[]
+}
+
+/// Jezik strank: v katerem jeziku gredo pisma, katere države ga dobijo, po
+/// katerih besedah se prepozna mail in katere besede izdelkov pomenijo barvo
+/// ali spol. Vgrajenih šest se napolni iz kode, nove doda admin.
+model Language {
+  /// ISO 639-1, npr. "nl".
+  code        String  @id
+  /// Ime v jeziku samem, npr. "Nederlands".
+  name        String
+  /// Angleško ime za AI (prevajanje, osnutki), npr. "Dutch".
+  englishName String
+  /// Države (ISO 3166-1 alpha-2), ločene z vejico. Država pripada enemu jeziku.
+  countries   String  @default("")
+  /// JSON: nagovor, podpis in besedila vseh vrst pisem.
+  templates   String
+  /// JSON: besede, po katerih se prepozna mail v tem jeziku.
+  markers     String  @default("[]")
+  /// JSON: { color: { beseda: kanonična barva }, gender: { beseda: men|women } }
+  words       String  @default("{}")
+  active      Boolean @default(true)
+  builtin     Boolean @default(false)
+  position    Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Zapisan potek dela podpore — kaj pišemo stranki in v kakšnem vrstnem redu.
+/// Vsebina je v bazi in ne v kodi, ker jo ureja ekipa sama: potek se spreminja
+/// hitreje od aplikacije, in kdor ga vsak dan hodi, ga zna popraviti najbolje.
+model ProcessBranch {
+  id       String  @id @default(cuid())
+  /// Črka ali kratka oznaka veje (A, B, …) — nosi jo naslov na risbi.
+  key      String
+  title    String
+  subtitle String?
+  position Int     @default(0)
+
+  steps ProcessStep[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+  updatedBy   User?    @relation("processBranchEditor", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@index([position])
+}
+
+/// Korak v veji. Otroci koraka so poti, ki se od njega razcepijo (odgovor DA
+/// proti NE), zato je zapis drevo in ne seznam — risba se iz njega izriše sama.
+model ProcessStep {
+  id       String        @id @default(cuid())
+  branchId String
+  branch   ProcessBranch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  parentId String?
+  parent   ProcessStep?  @relation("processStepTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children ProcessStep[] @relation("processStepTree")
+
+  /// act | mail | dec | wait | sys | end | undef — glej PROCESS_KINDS.
+  kind String @default("act")
+
+  title String
+  body  String?
+
+  /// Napis na poti do tega koraka ("DA", "NE", "brez odgovora").
+  edgeLabel String?
+
+  /// Odprta vprašanja tega koraka, po eno v vrstici. Iz njih nastane rdeč
+  /// seznam "kar je treba določiti" — da se ne vodi posebej in ne zastara.
+  open String?
+
+  position Int @default(0)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+  updatedBy   User?    @relation("processStepEditor", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@index([branchId, parentId, position])
+}
+
+/// Izmišljen nabiralnik kopije za faks (src/lib/demo-mailbox.ts). Nadomešča
+/// Gmail v testnem načinu; odgovori iz Deska se zapišejo sem.
+model DemoMail {
+  id        String   @id
+  threadId  String
+  sentAt    DateTime
+  fromAddr  String
+  toAddr    String
+  subject   String
+  body      String
+  /// incoming | outgoing
+  direction String
+
+  @@index([threadId])
+  @@index([sentAt])
+}

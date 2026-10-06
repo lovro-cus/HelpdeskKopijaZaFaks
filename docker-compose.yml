@@ -1,0 +1,39 @@
+name: helpdesk-faks
+
+# Kopija za faks: samo aplikacija. Javno jo streže Caddy produkcijskega Deska
+# (datoteka caddy-sites/faks.caddy na strežniku), ki je z njo povezan le prek
+# omrežja borvane_faks — do produkcijske aplikacije ta zabojnik ne vidi.
+#
+# Nobenih ključev: DESK_SANDBOX=1 izklopi urnike in vse klice navzven.
+
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: file:/data/helpdesk.db
+      UPLOAD_DIR: /data/uploads
+      TZ: Europe/Ljubljana
+      DESK_SANDBOX: "1"
+      APP_URL: https://faks.2-28-52-70.sslip.io
+      # Geslo demo računov ob prvem zagonu (datoteka .env poleg compose).
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-}
+    volumes:
+      - data:/data
+    expose:
+      - "3000"
+    networks:
+      faks:
+        aliases:
+          - faks-app
+    # Na istem strežniku kot produkcija — kopija je ne sme izstradati.
+    mem_limit: 768m
+    cpus: 1.0
+
+networks:
+  faks:
+    name: borvane_faks
+    external: true
+
+volumes:
+  data:

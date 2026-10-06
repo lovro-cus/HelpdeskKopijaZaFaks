@@ -1,0 +1,28 @@
+node_modules/
+.next/
+out/
+build/
+
+# Baza in priloge — nikoli v git
+*.db
+*.db-journal
+prisma/*.db
+uploads/
+uploads-sandbox/
+
+# Skrivnosti
+.env
+.env.local
+.env.production
+login.txt
+
+# Varnostne kopije na strežniku
+backups/
+
+next-env.d.ts
+tsconfig.tsbuildinfo
+
+# Lokalna orodja za oblikovanje/agentne seje
+.claude/
+.impeccable/
+prisma/seed.cjs
