@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Namesti trenutni commit (HEAD) na https://faks.2-28-52-70.sslip.io
+# Namesti trenutni commit (HEAD) na https://test.2-28-52-70.sslip.io
 #
 #   npm run deploy
 #

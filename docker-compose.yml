@@ -15,7 +15,7 @@ services:
       UPLOAD_DIR: /data/uploads
       TZ: Europe/Ljubljana
       DESK_SANDBOX: "1"
-      APP_URL: https://faks.2-28-52-70.sslip.io
+      APP_URL: https://test.2-28-52-70.sslip.io
       # Geslo demo računov ob prvem zagonu (datoteka .env poleg compose).
       DEMO_PASSWORD: ${DEMO_PASSWORD:-}
     volumes:

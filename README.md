@@ -9,7 +9,8 @@ ga zaključi.
 Projekt za vaje pri faksu. Vsi podatki (stranke, naročila, pošta, zaloga) so
 izmišljeni; aplikacija nima povezav z zunanjimi storitvami.
 
-- Javno: **https://faks.2-28-52-70.sslip.io** — ogled: `gost` / `Gost-Kroj-2026`
+- Projekt teče **lokalno** (glej Hiter zagon). Testna kopija na strežniku:
+  https://test.2-28-52-70.sslip.io — ogled: `gost` / `Gost-Kroj-2026`
 - Dokumentacija: [Vzpostavitev](docs/VZPOSTAVITEV.md) ·
   [Funkcionalnosti](docs/FUNKCIONALNOSTI.md) ·
   [Stanje testiranja](docs/STANJE-TESTIRANJA.md)

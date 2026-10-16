@@ -4,7 +4,8 @@ HelpDesk je spletna aplikacija za podporo strankam spletne trgovine (izmišljena
 trgovina oblačil **Kroj**). Vsi podatki so izmišljeni, aplikacija nima povezav
 na zunanje storitve.
 
-- Javni naslov: https://faks.2-28-52-70.sslip.io
+- Glavni način dela: lokalni zagon (spodaj)
+- Testna kopija na strežniku: https://test.2-28-52-70.sslip.io
 - Prijava za ogled: `gost` / `Gost-Kroj-2026`
 
 ## Tehnologije
