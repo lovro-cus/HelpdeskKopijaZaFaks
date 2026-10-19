@@ -1,0 +1,148 @@
+TIKETI
+PREJETO
+SHIPG ZALOGA
+DOBAVITELJ
+UREJANJE
+NADZORNA PLOŠČA
+Nov ticket
+A
+Administracija
+UPORABNIKI
+OBREMENITEV
+NASTAVITVE
+SEJE
+DEJAVNOST
+PRILOGE
+
+Račune ureja administrator — registracije ni. Nivo določa predaje in pravico zaključevanja.
+
+6 aktivnih · 6 skupaj
+
+Dodaj uporabnika
+AR
+
+@ali · čaka na zamenjavo gesla
+
+Nivo
+1
+2
+3
+4
+5
+Admin
+Jezik
+EN
+SL
+Aktiven
+SME UREJATI
+Skladišče
+Izdelki
+Jeziki
+Zadovoljstvo
+Obvestila
+Ne more zaključiti — mora predati naprej · 7 prevzetih · 33 vnosov · zadnja prijava nikoli
+NV
+
+@nina · čaka na zamenjavo gesla
+
+Nivo
+1
+2
+3
+4
+5
+Admin
+Jezik
+EN
+SL
+Aktiven
+SME UREJATI
+Skladišče
+Izdelki
+Jeziki
+Zadovoljstvo
+Obvestila
+Ne more zaključiti — mora predati naprej · 7 prevzetih · 47 vnosov · zadnja prijava nikoli
+EK
+
+@eva · čaka na zamenjavo gesla
+
+Nivo
+1
+2
+3
+4
+5
+Admin
+Jezik
+EN
+SL
+Aktiven
+SME UREJATI
+Skladišče
+Izdelki
+Jeziki
+Zadovoljstvo
+Obvestila
+Sme zaključiti naročilo · 15 prevzetih · 15 vnosov · zadnja prijava nikoli
+A
+
+@Admin · to si ti
+
+Nivo
+1
+2
+3
+4
+5
+Admin
+Jezik
+EN
+SL
+Aktiven
+SME UREJATI
+Admin sme urejati vse.
+Obvestila
+Sme zaključiti naročilo · 0 prevzetih · 0 vnosov · zadnja prijava 19. okt. 2026, 10:26
+GO
+
+@gost
+
+Nivo
+1
+2
+3
+4
+5
+Admin
+Jezik
+EN
+SL
+Aktiven
+SME UREJATI
+Admin sme urejati vse.
+Obvestila
+Sme zaključiti naročilo · 0 prevzetih · 0 vnosov · zadnja prijava nikoli
+MZ
+
+@marko · čaka na zamenjavo gesla
+
+Nivo
+1
+2
+3
+4
+5
+Admin
+Jezik
+EN
+SL
+Aktiven
+SME UREJATI
+Skladišče
+Izdelki
+Jeziki
+Zadovoljstvo
+Obvestila
+Sme zaključiti naročilo · 2 prevzetih · 4 vnosov · zadnja prijava nikoli
+KOPIJA ZA FAKS · IZMIŠLJENI PODATKI · POVEZAVE NAVZVEN IZKLOPLJENE

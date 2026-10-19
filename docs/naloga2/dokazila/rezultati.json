@@ -1,0 +1,88 @@
+[
+  {
+    "id": "TP-01",
+    "status": "passed",
+    "functional": true,
+    "environment": {
+      "browser": "155.0.8059.82",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "url": "http://localhost:3100/orders/KRJ-375"
+    },
+    "errors": [],
+    "date": "19. 10. 2026, 10:25:45",
+    "durationMs": 11142
+  },
+  {
+    "id": "TP-02",
+    "status": "failed",
+    "functional": true,
+    "environment": {
+      "browser": "155.0.8059.82",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "url": "http://localhost:3100/orders/KRJ-15"
+    },
+    "errors": [
+      "Each child in a list should have a unique \"key\" prop.%s%s See https://react.dev/link/warning-keys for more information. \n\nCheck the render method of `BulkOrderGrid`.  It was passed a child from OrdersPage.",
+      "Each child in a list should have a unique \"key\" prop.%s%s See https://react.dev/link/warning-keys for more information. \n\nCheck the render method of `BulkOrderGrid`.  It was passed a child from OrdersPage."
+    ],
+    "date": "19. 10. 2026, 10:25:58",
+    "durationMs": 19725
+  },
+  {
+    "id": "TP-03",
+    "status": "failed",
+    "functional": true,
+    "environment": {
+      "browser": "155.0.8059.82",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "url": "http://localhost:3100/orders?view=archive"
+    },
+    "errors": [
+      "Each child in a list should have a unique \"key\" prop.%s%s See https://react.dev/link/warning-keys for more information. \n\nCheck the render method of `BulkOrderGrid`.  It was passed a child from OrdersPage.",
+      "Each child in a list should have a unique \"key\" prop.%s%s See https://react.dev/link/warning-keys for more information. \n\nCheck the render method of `BulkOrderGrid`.  It was passed a child from OrdersPage."
+    ],
+    "date": "19. 10. 2026, 10:26:20",
+    "durationMs": 9729
+  },
+  {
+    "id": "TP-04",
+    "status": "passed",
+    "functional": true,
+    "environment": {
+      "browser": "155.0.8059.82",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "url": "http://localhost:3100/orders/KRJ-15"
+    },
+    "errors": [],
+    "date": "19. 10. 2026, 10:26:32",
+    "durationMs": 14087
+  },
+  {
+    "id": "TP-05",
+    "status": "passed",
+    "functional": true,
+    "environment": {
+      "browser": "155.0.8059.82",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "url": "http://localhost:3100/admin"
+    },
+    "errors": [],
+    "date": "19. 10. 2026, 10:26:48",
+    "durationMs": 8438
+  }
+]

@@ -1,0 +1,117 @@
+TIKETI
+PREJETO
+SHIPG ZALOGA
+DOBAVITELJ
+Nov ticket
+EK
+Naročila
+2125
+KRJ-15
+REFUND
+V DELU
+L2
+Srednja
+odprto 10 dni
+Stranka prosi za refund
+STRANKA
+lara.vzorcni@example.com
+Pošta
+SKLADIŠČE
+Poveži paket
+·
+
+2. nivo
+
+čaka, da ga nekdo s tega nivoja prevzame
+
+V DELU
+L2
+Prevzemi nase
+Na čakanje
+Predaj naprej
+Zaključi
+ARTIKLI V NAROČILU
+1 artikel
+ARTIKEL
+VELIKOST
+S
+ZNESEK
+REŠITEV
+Vračilo
+Zamenjava
+Brez ukrepa
+Še ne vemo
+Pokaži podrobnosti
+Dodaj artikel
+Za povrniti: 59,00 €
+POŠILJKE
+Paket je pri nas
+Dodaj pošiljko
+
+Vpiši tracking številko, ki jo je poslala stranka; naročilo počaka, dokler paket ne pride.
+
+9. OKTOBER 2026
+Nina Vidmar je odprl naročilo.
+10:25
+
+Odprto naročilo #2125.
+
+DANES
+Nina Vidmar je predal  L2
+10:26
+
+Stranka je poslala fotografije, prosim za odobritev refunda 59 EUR.
+
+EK
+
+Naročilo čaka v vrsti tvojega nivoja — z objavo ga prevzameš.
+
+Slika
+povleci sem ali prilepi s Ctrl+V
+Objavi
+PODATKI
+ŠT. NAROČILA
+PRIORITETA
+Nujno
+Visoka
+Srednja
+Nizka
+STRANKA
+IME
+E-MAIL
+TELEFON
+DOSTAVNI NASLOV
+KODA DRŽAVE
+Dvočrkovna koda države (npr. SI, AT). Vse države razen DE se lahko oskrbijo iz skladišča.
+VREDNOST NAROČILA
+EUR
+CHF
+GBP
+USD
+SEK
+NOK
+DKK
+PLN
+CZK
+POŠILJKE
+RETURN TRACKING
+TRACKING ZAMENJAVE
+DATUM NAROČILA
+Odprl Nina Vidmar · 9. okt. 2026, 10:25
+Zadnja sprememba: 19. okt. 2026, 10:26
+TA KUP 7
+1140
+EK
+1329
+EK
+1339
+EK
+1690
+EK
+2749
+EK
+2801
+EK
+2830
+EK
+KOPIJA ZA FAKS · IZMIŠLJENI PODATKI · POVEZAVE NAVZVEN IZKLOPLJENE

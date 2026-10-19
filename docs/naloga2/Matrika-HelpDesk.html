@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="sl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Matrika povezav funkcionalnosti in testnih primerov</title>
+<style>
+@page { size: A4; margin: 18mm; }
+* { box-sizing: border-box; }
+body { max-width: 1040px; margin: 36px auto; padding: 0 24px; color: #17212b; background: white; font: 15px/1.55 "Segoe UI", Arial, sans-serif; }
+h1,h2,h3 { color: #000; line-height: 1.2; break-after: avoid; }
+h1 { font-size: 29px; margin: 0 0 22px; }
+h2 { font-size: 22px; margin: 32px 0 14px; }
+h3 { font-size: 18px; }
+p { margin: 10px 0; }
+table { border-collapse: collapse; width: 100%; margin: 16px 0 22px; font-size: 13px; overflow-wrap: anywhere; }
+th,td { border: 1px solid #d9d9d9; padding: 9px 11px; text-align: left; vertical-align: top; }
+th { background: #e8eef4; color: #000; font-weight: 600; }
+tr:nth-child(even) td { background: #f7f9fb; }
+thead { display: table-header-group; }
+tr { break-inside: avoid; }
+pre { padding: 15px; border: 1px solid #d9d9d9; white-space: pre-wrap; overflow-wrap: anywhere; background: #f7f9fb; font-size: 13px; }
+code { font-family: Consolas, monospace; font-size: .92em; }
+@media print { body { max-width: none; margin: 0; padding: 0; font-size: 10pt; } h1 { font-size: 22pt; } h2 { font-size: 15pt; } table { font-size: 8.5pt; } th,td { padding: 6px; } pre { font-size: 9pt; } }
+</style></head><body><main><h1>Matrika povezav funkcionalnosti in testnih primerov</h1>
+<p>Projekt HelpDesk, različica dokumenta 3.0, 19. 10. 2026. Funkcionalnosti in izvorne številke izhajajo iz docs/FUNKCIONALNOSTI.md. Oznaka X pomeni neposredno preverjanje navedenega vidika funkcionalnosti. Pomišljaj pomeni, da primer tega vidika ne preverja.</p>
+<table>
+<thead>
+<tr><th>ID in izvorna številka</th><th>Funkcionalnost in preverjeni vidik</th><th>TP-01</th><th>TP-02</th><th>TP-03</th><th>TP-04</th><th>TP-05</th></tr>
+</thead>
+<tbody>
+<tr><td>F-01 / 1</td><td>Odpiranje ticketa s podatki naročila in stranke ter ohranitev po osvežitvi.</td><td>X</td><td>–</td><td>–</td><td>–</td><td>–</td></tr>
+<tr><td>F-02 / 2</td><td>Predaja na drugi nivo brez osebnega prevzemnika, komentar in obvestilo prejemnici.</td><td>–</td><td>X</td><td>–</td><td>–</td><td>–</td></tr>
+<tr><td>F-03 / 3</td><td>Zavrnitev zaključka refunda brez potrditve vračila in ohranitev odprtega statusa.</td><td>–</td><td>–</td><td>X</td><td>–</td><td>–</td></tr>
+<tr><td>F-04 / 4</td><td>Shranitev odgovora v demo pogovoru, stanje Čakamo in povezava s ticketom.</td><td>–</td><td>–</td><td>–</td><td>X</td><td>–</td></tr>
+<tr><td>F-08 / 8</td><td>Zavrnitev uporabniškega imena nina, ki že obstaja, brez novega računa.</td><td>–</td><td>–</td><td>–</td><td>–</td><td>X</td></tr>
+</tbody>
+</table>
+<p>Vsak primer pokriva eno glavno funkcionalnost. Prijava in priprava gesla sta predpogoja in nista predstavljeni kot samostojno testirani funkcionalnosti. Obvestilo v TP-02 je del preverjanja predaje.</p>
+<p>Matrika ne pomeni popolne pokritosti: TP-01 ne preverja prilog in artiklov, TP-03 ne preverja uspešnega zaključka ali vseh nivojskih pravic, TP-04 ne preverja zunanje dostave pošte, TP-05 ne preverja uspešnega ustvarjanja, deaktivacije in pravic gosta. Funkcionalnosti 5, 6, 7, 9 in 10 niso vključene. Pet izbranih področij od desetih ni merilo pokritosti vseh zahtev ali poti aplikacije.</p>
+<p>Viri za pregled pričakovanj: prisma/seed.ts; src/lib/actions/issues.ts; src/lib/actions/admin.ts; src/lib/actions/auth.ts; src/components/InboxWorkspace.tsx; src/lib/i18n/dictionaries.ts. Vsi primeri so bili izvedeni s Playwrightom; dejanski rezultati in ločena presoja konzole so v zapisnik-testiranja.md.</p>
+</main></body></html>

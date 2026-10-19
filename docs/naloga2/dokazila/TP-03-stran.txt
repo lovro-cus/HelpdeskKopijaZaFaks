@@ -1,0 +1,178 @@
+TIKETI
+PREJETO
+SHIPG ZALOGA
+DOBAVITELJ
+Nov ticket
+EK
+Arhiv
+
+10 NAROČIL
+
+MOJA
+7
+MOJ NIVO
+7
+VSA ODPRTA
+14
+SISTEMSKI
+ČAKANJE
+7
+ROČNA POMOČ
+ARHIV
+10
+Vse prioritete
+Nujno
+Visoka
+Srednja
+Nizka
+Po prioriteti
+Najnovejši prvi
+Po zadnjem vnosu
+Po vrsti
+Največ mailov najprej
+Najmanj mailov najprej
+REFUND
+3
+ZAMENJAVA
+3
+PREKLIC
+1
+NASLOV
+1
+TRACKING
+1
+KAKOVOST
+1
+0989
+EK
+REFUND
+L2
+
+Refund po dolgem čakanju — stranka nezadovoljna
+
+Nik Vzorčni · Kroj Merino Long Sleeve Black / S
+
+KRJ-26
+4
+4
+35d
+0967
+MZ
+KAKOVOST
+L3
+
+Strgan šiv na jakni — delno vračilo kot kulanca
+
+Tim Izmišljen · Kroj Rain Jacket Black / L
+
+KRJ-24
+4
+1
+4
+20d
+0978
+AR
+NASLOV
+L1
+
+Popravek hišne številke pred odpremo
+
+Lara Demo · Kroj Cargo Pants Green / M / EU 46 / W32
+
+KRJ-25
+4
+2
+18d
+1201
+EK
+ZAMENJAVA
+L2
+
+Zamenjava odposlana in dostavljena
+
+Luka Vaja · Kroj Cargo Pants Black / M / EU 46 / W32
+
+KRJ-20
+4
+3
+30d
+0912
+EK
+ZAMENJAVA
+L2
+
+Zamenjava pulover S → M zaključena
+
+Mia Modelni · Kroj Oversized Hoodie Gray / S
+
+KRJ-21
+4
+4
+27d
+0934
+EK
+REFUND
+L2
+
+Refund za jeans — 89 EUR
+
+Jan Testni · Kroj Slim Jeans Black / M / EU 46 / W32
+
+KRJ-22
+4
+3
+25d
+1108
+EK
+REFUND
+L2
+
+Refund izveden — 133,90 EUR
+
+Peter Vzorec · Kroj Rain Jacket Black / M +1
+
+KRJ-19
+4
+1
+4
+24d
+0950
+NV
+TRACKING
+L1
+
+Paket obtičal pri kurirju — dostavljen
+
+Zala Primerna · Kroj Essential T-Shirt White / L
+
+KRJ-23
+4
+3
+22d
+1021
+EK
+ZAMENJAVA
+L2
+
+Zamenjava barve — majica bela → črna
+
+Rok Navidezni · Kroj Essential T-Shirt White / M
+
+KRJ-28
+4
+3
+16d
+1003
+EK
+PREKLIC
+L2
+
+Preklic pred odpremo
+
+Ema Poskusna · Kroj Everyday Chinos Navy / S / EU 44 / W30 / Women
+
+KRJ-27
+4
+3
+12d
+KOPIJA ZA FAKS · IZMIŠLJENI PODATKI · POVEZAVE NAVZVEN IZKLOPLJENE

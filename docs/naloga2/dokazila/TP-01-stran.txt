@@ -1,0 +1,90 @@
+TIKETI
+PREJETO
+SHIPG ZALOGA
+DOBAVITELJ
+UREJANJE
+NADZORNA PLOŠČA
+Nov ticket
+A
+Naročila
+3001
+KRJ-375
+KAKOVOST
+V DELU
+L3
+Visoka
+odprto 0 dni
+Raztrgan šiv na rokavu
+STRANKA
+nova.stranka@example.com
+Pošta
+SKLADIŠČE
+Za povezavo paketa pri artiklu izberi Vračilo ali Zamenjavo.
+A
+
+Administratorjaz
+
+3. nivo · trenutno obravnava
+
+V DELU
+L3
+Na čakanje
+Predaj naprej
+Zaključi
+ARTIKLI V NAROČILU
+Artikli še niso vpisani. Dodaj artikel
+POŠILJKE
+Paket je pri nas
+Dodaj pošiljko
+
+Vpiši tracking številko, ki jo je poslala stranka; naročilo počaka, dokler paket ne pride.
+
+DANES
+Administrator je odprl naročilo.
+10:25
+A
+Administrator
+administrator
+Uredi
+
+Po prvem nošenju se je šiv na levem rokavu raztrgal.
+
+10:25
+A
+Slika
+povleci sem ali prilepi s Ctrl+V
+Objavi
+PODATKI
+ŠT. NAROČILA
+PRIORITETA
+Nujno
+Visoka
+Srednja
+Nizka
+STRANKA
+IME
+E-MAIL
+TELEFON
+DOSTAVNI NASLOV
+KODA DRŽAVE
+Dvočrkovna koda države (npr. SI, AT). Vse države razen DE se lahko oskrbijo iz skladišča.
+VREDNOST NAROČILA
+EUR
+CHF
+GBP
+USD
+SEK
+NOK
+DKK
+PLN
+CZK
+POŠILJKE
+RETURN TRACKING
+TRACKING ZAMENJAVE
+DATUM NAROČILA
+Odprl Administrator · 19. okt. 2026, 10:25
+Zadnja sprememba: 19. okt. 2026, 10:25
+TA KUP 1
+3001
+A
+KOPIJA ZA FAKS · IZMIŠLJENI PODATKI · POVEZAVE NAVZVEN IZKLOPLJENE
