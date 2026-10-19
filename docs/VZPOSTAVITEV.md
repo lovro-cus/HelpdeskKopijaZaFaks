@@ -40,10 +40,12 @@ Računi (geslo za vse razen gosta je `DEMO_PASSWORD` iz `.env`, privzeto `Kroj-D
 | Uporabnik | Vloga |
 |---|---|
 | `Admin` | administrator |
-| `nina`, `ali` | 1. nivo (zahtevata zamenjavo gesla ob prvi prijavi) |
+| `nina`, `ali` | 1. nivo |
 | `eva` | 2. nivo |
 | `marko` | 3. nivo |
 | `gost` / `Gost-Kroj-2026` | 3. nivo, admin samo za ogled (gesla ni mogoče zamenjati) |
+
+`nina`, `ali`, `eva` in `marko` ob prvi prijavi zahtevajo zamenjavo gesla.
 
 ### Uporabni ukazi
 

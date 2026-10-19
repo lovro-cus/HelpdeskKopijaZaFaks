@@ -26,3 +26,6 @@ tsconfig.tsbuildinfo
 .claude/
 .impeccable/
 prisma/seed.cjs
+
+# shranjene strani z navodili (Moodle)
+/navodila/
