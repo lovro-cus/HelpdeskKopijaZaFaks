@@ -3,27 +3,323 @@
 **Projekt:** HelpDesk – podpora strankam spletne trgovine z oblačili (izmišljena trgovina Kroj)
 **Repozitorij:** https://github.com/lovro-cus/HelpdeskKopijaZaFaks
 **Avtor:** Lovro Čuš
-**Datum:** 19. 10. 2026
+**Datum:** 25. 10. 2026 (prva oddaja 19. 10. 2026, popravljeno po povratni informaciji)
 
 Vsebina:
 1. Postopek
-2. Končni ukaz za agenta
+2. Končni ukaz za agenta (v3)
 3. Testni primeri (ustvaril agent)
-4. Matrika povezav funkcionalnosti in testnih primerov
-5. Komentar
-6. Uporabljena orodja umetne inteligence
-7. Priloga: prvi ukaz (v1)
+4. Matrika povezav zahtev, funkcionalnosti in testnih primerov
+5. Izvedba testnih primerov
+6. Komentar
+7. Uporabljena orodja umetne inteligence
+8. Priloga: prejšnja ukaza (v1, v2)
 
 ## 1. Postopek
 
-1. Napisal sem prvi ukaz (v1) in ga dal agentu v novi seji. Agent je imel dostop do repozitorija, drugega konteksta ni dobil.
-2. Rezultat sem pregledal: testne primere sem primerjal z dokumentacijo (`docs/FUNKCIONALNOSTI.md`, `docs/VZPOSTAVITEV.md`), s semenom baze (`prisma/seed.ts`) in z aplikacijo, ki je tekla lokalno.
-3. Ukaz sem dopolnil (v2) in ga dal agentu v novi seji.
-4. Vseh pet testnih primerov iz v2 sem na sveži bazi (`npm run db:seed`) ročno izvedel v lokalni aplikaciji. Rezultati so v poglavju 5.
+1. **Ukaz v1:** dal sem ga agentu v novi seji. Agent je imel dostop do repozitorija, drugega konteksta ni dobil. Rezultat je bil površen.
+2. **Ukaz v2:** zahteval je natančne atribute, podatke iz semena baze in imena iz vmesnika, ki jih je agent preveril v izvorni kodi. Primeri so bili natančni, a so preverjali tisto, kar je sprogramirano, ne tistega, kar zahteva dokumentacija.
+3. **Povratna informacija profesorice:** testi morajo izhajati iz dokumentacije in preverjati, da se zahtevano res zgodi (predaja v drug nivo mora ticket dejansko prestaviti v drug nivo). Preverjati ne smejo samo tega, kar je zapisano v kodi.
+4. **Ukaz v3:** edini vir resnice je dokumentacija (`docs/FUNKCIONALNOSTI.md`, `docs/VZPOSTAVITEV.md`), branje izvorne kode je prepovedano. Vsak pričakovani rezultat ima sklic na zahtevo in preverja dejanski učinek v vmesniku.
+5. **Izvedba:** vseh pet primerov iz v3 sem ročno izvedel v lokalni aplikaciji (poglavje 5).
 
 Testni primeri v poglavju 3 so taki, kot jih je vrnil agent. Nisem jih popravljal. Kaj bi spremenil sam, je zapisano v komentarju.
 
-## 2. Končni ukaz za agenta (v2)
+## 2. Končni ukaz za agenta (v3)
+
+```text
+Si tester programske opreme. Testiraš spletno aplikacijo HelpDesk – podporo strankam spletne trgovine z oblačili (izmišljena trgovina Kroj). Projekt je v mapi C:\HelpdeskKopijaZaFaks.
+
+Naloga: oblikuj 5 testnih primerov za ročno funkcionalno testiranje po metodi črne skrinjice. Datotek v projektu ne spreminjaj, rezultat samo vrni kot odgovor.
+
+Vir resnice je SAMO dokumentacija:
+- docs/FUNKCIONALNOSTI.md – zahteve (funkcionalnosti 1–10, kdo jih sme izvajati in kje v aplikaciji so),
+- docs/VZPOSTAVITEV.md – zagon, testni podatki in uporabniški računi.
+Izvorne kode (mapa src/, prisma/, tests/) NE beri. Testni primer mora preverjati, ali aplikacija naredi to, kar zahteva dokumentacija – ne tega, kar je trenutno sprogramirano. Če dokumentacija česa ne določa (npr. natančnega besedila sporočila o napaki), tega ne izmišljuj, ampak opiši pričakovano vedenje (npr. »dejanje je zavrnjeno, ticket ostane odprt«).
+
+Pričakovani rezultati morajo preverjati dejanski učinek zahteve, viden v aplikaciji. Primer: pri predaji ticketa ne zadošča, da se pokaže sporočilo o uspehu – preveri, da je ticket res na višjem nivoju (pri uporabniku tega nivoja je viden, prejemnik ima obvestilo, prejšnji lastnik ga nima več kot svojega). Stanje preverjaj skozi uporabniški vmesnik, ne v bazi.
+
+Vsak testni primer naj ima te atribute (po ISO/IEC/IEEE 29119-3):
+- ID (TP-01 … TP-05)
+- naslov
+- testirana funkcionalnost (številka in ime iz FUNKCIONALNOSTI.md)
+- vir zahteve – dobesedni stavek ali vrstica tabele iz dokumentacije, iz katere izhaja pričakovani rezultat
+- prioriteta (visoka / srednja / nizka) s kratko utemeljitvijo
+- vrsta: pozitiven ali negativen
+- predpogoji (stanje aplikacije, kateri uporabnik je prijavljen)
+- testni podatki (konkretne vrednosti; uporabniki, gesla in podatki samo iz dokumentacije)
+- koraki – oštevilčeni; pri vsakem koraku pričakovani odziv
+- končni pričakovani rezultat – kako tester preveri, da se je zahtevano res zgodilo
+- stanje po izvedbi, kot je vidno v aplikaciji
+
+Pravila:
+1. Vsaj dva primera naj bosta negativna (aplikacija mora zavrniti dejanje, ki ga dokumentacija ne dovoli).
+2. Vsak primer je neodvisen od drugih in se začne na sveži bazi (`npm run db:seed`).
+3. Pokrij 5 različnih funkcionalnosti; prednost imajo ključni tokovi (odpiranje, predaja, zaključevanje, pošta, upravljanje uporabnikov).
+4. Upoštevaj vse, kar dokumentacija pravi o računih (npr. zamenjava gesla ob prvi prijavi), in to zapiši v predpogoje, ne v korake testa.
+
+Oblika: v slovenščini, Markdown. Vsak testni primer kot svojo tabelo z dvema stolpcema (atribut | vrednost), koraki v ločeni tabeli (# | korak | pričakovani odziv). Na koncu naštej mesta, kjer je dokumentacija nejasna ali nepopolna za testiranje.
+```
+
+## 3. Testni primeri (ustvaril agent)
+
+Vir: samo `docs/FUNKCIONALNOSTI.md` (v nadaljevanju FUNK) in `docs/VZPOSTAVITEV.md` (VZP). V projektu nisem spremenil nobene datoteke.
+
+**Skupni predpogoji za vse primere (SP)**
+- SP-1: Projekt je nameščen po VZP »Lokalni zagon«. Datoteka `.env` je kopija `.env.example`, `DEMO_PASSWORD` ima privzeto vrednost `Kroj-Demo-2026`.
+- SP-2: Pred vsakim primerom tester požene `npm run db:seed` (»POBRIŠE bazo in jo znova napolni«) in nato `npm run dev`. Aplikacija teče na `http://localhost:3000`.
+- SP-3: Uporabniki `nina`, `ali`, `eva` in `marko` morajo po VZP ob prvi prijavi zamenjati geslo. Tester to opravi pred začetkom primera: prijavi se z `Kroj-Demo-2026` in nastavi novo geslo, ki si ga sam izbere in zapiše (npr. `Kroj-Test-2026!x`). Dokumentacija pravil za geslo ne navaja. `Admin` in `gost` zamenjave po dokumentaciji ne zahtevata.
+
+
+### TP-01
+
+| Atribut | Vrednost |
+|---|---|
+| ID | TP-01 |
+| Naslov | Uporabnik 1. nivoja odpre nov ticket z enim artiklom |
+| Testirana funkcionalnost | 1. Odpiranje ticketa |
+| Vir zahteve | FUNK, tabela: »\| 1 \| Odpiranje ticketa \| vsi \| Tiketi → Nov ticket (bližnjica N) \|«; FUNK §1: »Ticket dobi ključ `KRJ-n` in se pokaže kot kvadrat v mreži.«; FUNK, Dodatno: »iskanje po naročilu, stranki, naslovu in trackingu« |
+| Prioriteta | Visoka: to je vstopna točka vsega dela (»1. nivo odpre in preda«), brez nje ostali tokovi ne tečejo. |
+| Vrsta | Pozitiven |
+| Predpogoji | SP-1 do SP-3. Prijavljena je `nina` (1. nivo) z že zamenjanim geslom. Odprt je pogled Tiketi. |
+| Testni podatki | Številka naročila: `990001`. Dokumentacija formata ne določa; v koraku 1 se preveri, da v semenu še ne obstaja. Stranka: `Testna Stranka`. Artikel: izdelek `majica`, barva `Črna`, velikost `L` (iz primera v FUNK §5), znesek `29,90`, rešitev `vračilo`. Vrsta težave: prva ponujena vrednost (seznam vrst se ureja v Nastavitvah, dokumentacija vrednosti ne našteva). |
+
+| # | Korak | Pričakovani odziv |
+|---|---|---|
+| 1 | V iskanje vpiši `990001`. | Ni zadetka, takega ticketa še ni. |
+| 2 | V pogledu Tiketi klikni »Nov ticket«. | Odpre se obrazec za nov ticket s polji za številko naročila, stranko, artikle (izdelek, velikost, barva, znesek, rešitev) in vrsto težave. |
+| 3 | Vpiši številko naročila in stranko iz testnih podatkov. | Vrednosti se prikažejo v poljih. |
+| 4 | Dodaj artikel z izdelkom, barvo, velikostjo, zneskom in rešitvijo `vračilo`. | Artikel je na seznamu artiklov z vpisanimi vrednostmi. Rešitev omogoča izbiro med vračilo, menjava in brez ukrepa. |
+| 5 | Izberi vrsto težave in shrani ticket. | Ticket je ustvarjen in dobi ključ v obliki `KRJ-n`. Tester si ključ zapiše. |
+| 6 | Vrni se na pogled Tiketi. | V mreži je nov kvadrat z zapisanim ključem. |
+| 7 | V iskanje vpiši `990001`. | Najden je natanko en ticket z zapisanim ključem. |
+| 8 | Odpri ticket. | Prikazani so številka naročila `990001`, stranka `Testna Stranka`, artikel (majica, Črna, L, 29,90, vračilo) in izbrana vrsta težave. |
+
+| Atribut | Vrednost |
+|---|---|
+| Končni pričakovani rezultat | Ticket res obstaja: ima ključ `KRJ-n`, je kvadrat v mreži, najde ga iskanje po naročilu, na njegovi strani pa so vsi vpisani podatki. Sporočilo o uspehu samo po sebi ne zadošča. |
+| Stanje po izvedbi | V aplikaciji je en ticket več kot po semenu (seme jih ima 31). Ticket z naročilom `990001` je odprt in je ninin. |
+
+
+### TP-02
+
+| Atribut | Vrednost |
+|---|---|
+| ID | TP-02 |
+| Naslov | Lastnik 1. nivoja preda ticket s komentarjem 2. nivoju |
+| Testirana funkcionalnost | 2. Predaja ticketa višjemu nivoju |
+| Vir zahteve | FUNK §2: »Lastnik ticket s komentarjem preda naslednjemu nivoju. Prejemnik dobi obvestilo v zvoncu.«; FUNK, uvod: »Delo teče po nivojih: 1. nivo odpre in preda, 2. ali 3. nivo zaključi.« |
+| Prioriteta | Visoka: osrednji tok med nivoji. Napaka pomeni, da ticket obvisi pri 1. nivoju. |
+| Vrsta | Pozitiven |
+| Predpogoji | SP-1 do SP-3 za `nina` in `eva`. Seme ne pove, kateri ticket je ninin, zato `nina` pred začetkom odpre ticket po podatkih iz TP-01 (naročilo `990002`) in si zapiše njegov ključ. Prijavljena je `nina`. |
+| Testni podatki | Ticket: naročilo `990002` (ključ zapisan v predpogojih). Komentar: `Stranka želi vračilo, prosim za obdelavo.` Prejemnik: 2. nivo, to je `eva`, edini uporabnik 2. nivoja po VZP. |
+
+| # | Korak | Pričakovani odziv |
+|---|---|---|
+| 1 | Kot `nina` odpri ticket `990002`. | Ticket je odprt. Viden je gumb »Predaj naprej«, ker je `nina` lastnica. |
+| 2 | Klikni »Predaj naprej«. | Aplikacija zahteva komentar. Kot cilj je ponujen naslednji nivo (2. nivo). |
+| 3 | Vpiši komentar in potrdi predajo. | Predaja je izvedena. V niti ticketa se pojavi dogodek predaje s komentarjem. |
+| 4 | Kot `nina` preveri seznam svojih ticketov (npr. filter »moje«). | Ticketa `990002` ni več med nininimi. |
+| 5 | Odjavi se in se prijavi kot `eva`. | Prijava uspe. |
+| 6 | Odpri zvonec z obvestili. | Med obvestili je obvestilo o predaji ticketa `990002`. |
+| 7 | Klikni obvestilo. | Odpre se ticket `990002`. Komentar iz koraka 3 je viden v niti, ticket je na 2. nivoju. |
+
+| Atribut | Vrednost |
+|---|---|
+| Končni pričakovani rezultat | Ticket je na 2. nivoju: `eva` ga vidi kot svojega oziroma kot ticket svojega nivoja, v zvoncu ima obvestilo, komentar je v niti, `nina` pa ga nima več kot svojega. |
+| Stanje po izvedbi | Ticket `990002` je odprt in dodeljen 2. nivoju (`eva`). V niti sta dogodek predaje in komentar. `eva` ima obvestilo v zvoncu. |
+
+
+### TP-03
+
+| Atribut | Vrednost |
+|---|---|
+| ID | TP-03 |
+| Naslov | Uporabnik 1. nivoja ne more zaključiti ticketa |
+| Testirana funkcionalnost | 3. Zaključevanje ticketa |
+| Vir zahteve | FUNK, tabela: »\| 3 \| Zaključevanje ticketa \| nivo ≥ 2 \| stran ticketa → Zaključi \|«; FUNK §3: »Zaključi lahko samo nivo 2 ali več.«; »Zaključen ticket gre v Arhiv« |
+| Prioriteta | Visoka: preverja pravice. Prezgodnje zaprtje 1. nivoja bi obšlo pregled višjega nivoja. |
+| Vrsta | Negativen |
+| Predpogoji | SP-1 do SP-3 za `nina`. `nina` pred začetkom odpre ticket po podatkih iz TP-01, a z naročilom `990003` in rešitvijo `brez ukrepa`, da zahteva po potrjenem vračilu paketa ne vpliva na rezultat. Prijavljena je `nina`. |
+| Testni podatki | Ticket z naročilom `990003` (ključ zapisan v predpogojih), rešitev `brez ukrepa`. |
+
+| # | Korak | Pričakovani odziv |
+|---|---|---|
+| 1 | Kot `nina` odpri ticket `990003`. | Ticket je odprt. |
+| 2 | Poišči dejanje »Zaključi« in ga poskusi izvesti. | Dejanje ni na voljo (gumba ni ali je onemogočen) ali pa je zavrnjeno. Natančnega besedila sporočila dokumentacija ne določa. |
+| 3 | Osveži stran ticketa. | Ticket je še vedno odprt, v niti ni dogodka zaključka. |
+| 4 | Odpri Arhiv. | Ticketa `990003` v Arhivu ni. |
+| 5 | V pogledu Tiketi poišči `990003`. | Ticket je še vedno med odprtimi ticketi v mreži. |
+
+| Atribut | Vrednost |
+|---|---|
+| Končni pričakovani rezultat | Uporabnik 1. nivoja ticketa ni zaključil: ticket ostane odprt, ni v Arhivu, v niti ni zaključka. |
+| Stanje po izvedbi | Ticket `990003` je odprt in ninin, enak kot pred testom. |
+
+
+### TP-04
+
+| Atribut | Vrednost |
+|---|---|
+| ID | TP-04 |
+| Naslov | Odgovor stranki s hitrim odgovorom iz Prejeto je viden tudi na strani ticketa |
+| Testirana funkcionalnost | 4. Pregled pošte in odgovor stranki |
+| Vir zahteve | FUNK §4: »Uporabnik prebere pogovor in odgovori s hitrim odgovorom (navodila za vračilo, vračilo ali menjava) ali lastnim besedilom. Na strani ticketa je ista pošta prikazana ob niti.«; VZP: »odgovor iz aplikacije se zapiše v pogovor, nikamor ne odide« |
+| Prioriteta | Srednja: pogost tok dela podpore. V tej kopiji pošta ne odide, zato je napaka manj kritična kot pri ticketih. |
+| Vrsta | Pozitiven |
+| Predpogoji | SP-1 do SP-3 za `ali`. Prijavljen je `ali` (1. nivo, funkcionalnost je za »vsi«). Seme ima 33 pogovorov, a dokumentacija ne pove, kateri je povezan s ticketom. Tester zato v Prejeto (skupina »odprto«) izbere prvi pogovor, ki je povezan s ticketom, in si zapiše številko naročila. |
+| Testni podatki | Pogovor: prvi pogovor v skupini »odprto«, povezan s ticketom (številka naročila zapisana). Hitri odgovor: `navodila za vračilo`. |
+
+| # | Korak | Pričakovani odziv |
+|---|---|---|
+| 1 | Odpri Prejeto. | Pogovori so razvrščeni v skupine odprto, moje, čakamo in brez ticketa. |
+| 2 | V skupini »odprto« odpri izbrani pogovor. | Prikaže se celoten pogovor s stranko in povezava s ticketom (po številki naročila oziroma naslovu). |
+| 3 | Izberi hitri odgovor »navodila za vračilo«. | Polje za odgovor se izpolni z besedilom predloge. |
+| 4 | Pošlji odgovor. | Odgovor se kot zadnje sporočilo zapiše v pogovor. |
+| 5 | Osveži Prejeto in znova odpri isti pogovor. | Odgovor je še vedno v pogovoru, torej je shranjen. |
+| 6 | Prek povezave odpri ticket in na njegovi strani zavihek »Pošta«. | Ob niti je isti pogovor, vključno z odgovorom iz koraka 4. |
+
+| Atribut | Vrednost |
+|---|---|
+| Končni pričakovani rezultat | Odgovor je trajno zapisan v pogovor in je enak v Prejeto in na strani povezanega ticketa (Pošta). |
+| Stanje po izvedbi | Izbrani pogovor ima eno odhodno sporočilo več (navodila za vračilo), vidno v Prejeto in na strani ticketa. Ticket ostane odprt. |
+
+
+### TP-05
+
+| Atribut | Vrednost |
+|---|---|
+| ID | TP-05 |
+| Naslov | Gost (admin samo za ogled) ne vidi sej in dnevnika dejavnosti in ne more ustvariti uporabnika |
+| Testirana funkcionalnost | 8. Upravljanje uporabnikov |
+| Vir zahteve | FUNK §8: »Vidi tudi aktivne seje in dnevnik dejavnosti (gost teh dveh ne vidi).«; VZP, tabela: »\| `gost` / `Gost-Kroj-2026` \| 3. nivo, admin samo za ogled (gesla ni mogoče zamenjati) \|«; FUNK §8: »Administrator ustvari račun …« |
+| Prioriteta | Visoka: varnost in zasebnost. Račun gost je javno objavljen v VZP, zato mora biti res samo za ogled. |
+| Vrsta | Negativen |
+| Predpogoji | SP-1 in SP-2. Prijavljen je `gost` z geslom `Gost-Kroj-2026`. Zamenjava gesla ni potrebna, ker gesla ni mogoče zamenjati. |
+| Testni podatki | Gost: `gost` / `Gost-Kroj-2026`. Novi račun, ki ga gost poskusi ustvariti: uporabniško ime `testgost`, 1. nivo. Administrator za kontrolo: `Admin` / `Kroj-Demo-2026`. |
+
+| # | Korak | Pričakovani odziv |
+|---|---|---|
+| 1 | Kot `gost` odpri Nadzorna plošča → Uporabniki. | Seznam uporabnikov je viden samo za ogled. |
+| 2 | Poišči prikaz aktivnih sej in dnevnika dejavnosti. | Nobeden od obeh ni prikazan. |
+| 3 | Poskusi ustvariti račun `testgost` (1. nivo). | Dejanje ni na voljo ali je zavrnjeno. Besedila sporočila dokumentacija ne določa. |
+| 4 | Osveži seznam uporabnikov. | Uporabnika `testgost` ni. |
+| 5 | Odjavi se in se prijavi kot `Admin`. | Prijava uspe. |
+| 6 | Odpri Nadzorna plošča → Uporabniki. | Prikazani so aktivne seje in dnevnik dejavnosti (kontrola, da obstajata in ju gost res ni videl). Uporabnika `testgost` ni. |
+
+| Atribut | Vrednost |
+|---|---|
+| Končni pričakovani rezultat | Gost ne vidi aktivnih sej in dnevnika dejavnosti in ne more ustvariti računa. To potrdi seznam uporabnikov, ki ga vidi administrator. |
+| Stanje po izvedbi | Seznam uporabnikov je enak kot po semenu (Admin, nina, ali, eva, marko, gost). Novega računa ni. |
+
+
+### Mesta, kjer je dokumentacija nejasna ali nepopolna za testiranje
+
+1. **Testni podatki semena niso opisani.** Dokumentacija navaja samo število ticketov, paketov in pogovorov (31, 15, 33), ne pa katerih: kateri ticket je čigav, katere številke naročil obstajajo, kateri pogovori so povezani s ticketi. Zato si morajo TP-02 in TP-03 ticket ustvariti sami, TP-04 pa izbira pogovor med izvedbo.
+2. **»ticket 1140«** (FUNK §5): ni jasno, ali je to številka naročila ali `KRJ-1140`. Seme ima samo 31 ticketov, kar kaže na naročilo.
+3. **Odpiranje ticketa:** ni določeno, katera polja so obvezna, kakšna je oblika številke naročila, kaj se zgodi ob podvojeni številki naročila, kako se dodeli `n` v `KRJ-n` in kdo postane lastnik novega ticketa. Seznam »vrst težave« ni naveden.
+4. **Predaja ticketa:** tabela pravi »Kdo: vsi«, besedilo pa »Lastnik … preda«. Ni jasno, ali sme predati tudi nekdo, ki ni lastnik. Ni določeno, ali se preda nivoju ali konkretnemu uporabniku, kdo postane lastnik ob več uporabnikih istega nivoja, kaj lahko naredi 3. nivo (višjega nivoja ni) in ali je komentar obvezen.
+5. **»Zunanji vnos«:** ni opisano, kaj je vnos (komentar, slika, sprememba artikla) in kje je oznaka vidna.
+6. **Zaključevanje:** ni našteto, katere vrste »zahtevajo vračilo«, niti kako je v aplikaciji vidno, da je paket »potrjeno nazaj«. Ni določeno, ali sme 2. nivo zaključiti tudi ticket, ki ni njegov.
+7. **Samodejno ponovno odprtje:** če stranka po zaprtju znova piše, se ticket ponovno odpre. Nabiralnik je izmišljen in ni opisano, kako sprožiti novo dohodno sporočilo, zato zahteve ročno ni mogoče preveriti.
+8. **Prejeto:** pomen skupin »moje« in »čakamo« ni opisan. Ni določeno, ali se pogovor po odgovoru premakne (npr. v »čakamo«). Ni opisano, kaj se zgodi, ko se številka naročila in naslov ne ujemata z istim ticketom.
+9. **Gost »admin samo za ogled«:** ni jasno, katere admin strani gost vidi in ali so prepovedana dejanja skrita ali zavrnjena. Prav tako ni določeno, ali sme gost kot 3. nivo zaključevati in predajati tickete.
+10. **Gesla:** pravila za novo geslo niso določena. Ni določeno, ali `npm run db:seed` ponastavi zahtevo za zamenjavo gesla ob prvi prijavi in ali jo ima tudi `Admin`.
+11. **Pravice:** ni navedeno, kateri uporabniki v semenu imajo pravico »Zadovoljstvo« ali »Izdelki«. Pri F9 ni jasno, ali »administrator, pravica Izdelki« pomeni »ali« ali »in«. Ni opisano, kaj točno pomeni »področja urejanja«.
+12. **Deaktivacija in ponastavitev gesla:** ni opisano, kaj se zgodi z aktivnimi sejami in ticketi deaktiviranega uporabnika, niti kako uporabnik dobi ponastavljeno geslo.
+13. **Sporočila o napakah** in pragovi (npr. katera ocena je »nizka«, privzeta vrednost) niso določeni, zato negativni primeri lahko preverjajo le, da je dejanje zavrnjeno in da se stanje ne spremeni.
+14. **Bližnjica N:** ni navedeno, kje deluje (na vseh straneh ali samo v pogledu Tiketi).
+
+## 4. Matrika povezav zahtev, funkcionalnosti in testnih primerov
+
+Zahteve so stavki iz `docs/FUNKCIONALNOSTI.md` (FUNK) in `docs/VZPOSTAVITEV.md` (VZP).
+● – testni primer zahtevo neposredno preverja.
+○ – testni primer se zahteve dotakne v predpogojih ali kontrolnem koraku.
+
+| Funkcionalnost | Zahteva (vir) | TP-01 | TP-02 | TP-03 | TP-04 | TP-05 |
+|---|---|:-:|:-:|:-:|:-:|:-:|
+| 1 Odpiranje ticketa | Ticket z naročilom, stranko, artikli in vrsto težave dobi ključ `KRJ-n` in se pokaže v mreži (FUNK §1) | ● | ○ | ○ | | |
+| 2 Predaja višjemu nivoju | Lastnik ticket s komentarjem preda naslednjemu nivoju (FUNK §2) | | ● | | | |
+| 2 Predaja višjemu nivoju | Prejemnik dobi obvestilo v zvoncu (FUNK §2) | | ● | | | |
+| 3 Zaključevanje | Zaključi lahko samo nivo 2 ali več (FUNK §3, tabela) | | | ● | | |
+| 3 Zaključevanje | Zaključen ticket gre v Arhiv (FUNK §3) | | | ○ | | |
+| 4 Pošta in odgovor | Odgovor s hitrim odgovorom; na strani ticketa je ista pošta (FUNK §4) | | | | ● | |
+| 4 Pošta in odgovor | Odgovor se zapiše v pogovor, nikamor ne odide (VZP) | | | | ● | |
+| 8 Upravljanje uporabnikov | Administrator vidi seje in dnevnik dejavnosti, gost teh dveh ne vidi (FUNK §8) | | | | | ● |
+| 8 Upravljanje uporabnikov | Gost je administrator samo za ogled (VZP) | | | | | ● |
+| Dodatno: iskanje | Iskanje po naročilu (FUNK, Dodatno) | ● | | ○ | | |
+| Računi | `nina`, `ali`, `eva`, `marko` ob prvi prijavi zamenjajo geslo (VZP) | ○ | ○ | ○ | ○ | |
+
+Ti primeri ne pokrivajo funkcionalnosti 5 (rezervacija paketa iz zaloge), 6 (naročilo pri dobavitelju), 7 (zadovoljstvo strank), 9 (katalog izdelkov) in 10 (nastavitve).
+
+## 5. Izvedba testnih primerov
+
+Izvedeno 25. 10. 2026 v lokalni aplikaciji (`npm run dev`) na sveži bazi (`npm run db:seed`). Primeri so tekli zaporedno na isti bazi. Vsak je uporabljal svoje podatke (svoje naročilo, svoj pogovor), zato drug na drugega niso vplivali.
+
+| Testni primer | Rezultat | Opažanje |
+|---|---|---|
+| TP-01 Odpiranje ticketa | **delno neuspešen** | Ticket je ustvarjen (`KRJ-157`), viden v mreži in najden z iskanjem `990001`. Naročilo, stranka, izdelek, znesek, rešitev in vrsta težave so shranjeni. **Barve in velikosti ni mogoče vnesti:** obrazec ponudi izbiro različice samo za izdelke iz kataloga, za vpisan izdelek »majica« ni polja. FUNK §1 pravi, da uporabnik vpiše »izdelek, velikost, barva«, in tega ne omejuje na katalog. Po ustvarjanju se odpre stran ticketa in ne mreža (korak 6 je zato potreboval vrnitev na Tiketi). |
+| TP-02 Predaja višjemu nivoju | uspešen | Po predaji je ticket na 2. nivoju (»čaka, da ga nekdo s tega nivoja prevzame«), v niti sta dogodek predaje in komentar. Nina ga nima več v »Moja«. Eva ima v zvoncu obvestilo »#990002 · Nina Vidmar« s komentarjem, ticket je v njenem zavihku »Moj nivo«. Opažanje: kot cilj predaje so ponujeni tudi 1. nivo in posamezni uporabniki, FUNK pa govori o predaji »naslednjemu nivoju«. V niti piše »Nina Vidmar je predal« namesto »predala«. |
+| TP-03 Zaključevanje (1. nivo) | uspešen | Nina na ticketu nima gumba »Zaključi«, namesto njega je besedilo »Zaključi lahko 2. nivo ali višji — ko končaš svoj del, predaj naprej.«. Po osvežitvi je ticket še »V delu«, ni ga v Arhivu, v niti ni zaključka. |
+| TP-04 Odgovor stranki | uspešen | Hitri odgovor »Navodila za vračilo« izpolni polje, odgovor je po pošiljanju in po osvežitvi v pogovoru. Na strani ticketa `KRJ-1` je pod »Pošta« isti pogovor z odgovorom. Opažanja: stranka piše v nemščini, predloga je v slovenščini. Gumb se glasi »Pošlji kot Ana«, čeprav je prijavljen Ali. V niti ticketa piše »je stranki poslal/a pismo o nadomestku«, čeprav je šlo za navadna navodila za vračilo. |
+| TP-05 Gost (samo ogled) | uspešen | Gost na Nadzorni plošči nima zavihkov Seje in Dejavnost, gumba »Dodaj uporabnika« ni, vsa polja (112) so onemogočena. Administrator vidi zavihka Seje in Dejavnost, uporabnika `testgost` ni. |
+
+**Povzetek:** 4 uspešni, 1 delno neuspešen. Pri izvedbi so se pokazala tudi odstopanja, ki jih testi v v2 niso mogli najti, ker so imeli trenutno besedilo aplikacije zapisano kot pričakovano (»Pošlji kot Ana«, »pismo o nadomestku«, »je predal«).
+
+## 6. Komentar
+
+### Kaj sem moral popraviti v ukazu
+
+**v1 → v2**
+1. **Premalo atributov.** Manjkali so testirana funkcionalnost (brez nje ni matrike), prioriteta, vrsta, testni podatki in pričakovani odziv po korakih.
+2. **Nedoločeni podatki.** Primeri so imeli korake, kot je »vpiši podatke stranke«, in odvisnosti, kot je »ticket iz TP-01«. Zahteval sem konkretne vrednosti in neodvisne primere.
+3. **Dvoumen pričakovani rezultat.** Zapisano je bilo »gumba ni ali pa je dejanje zavrnjeno«. Zahteval sem en preverljiv izid.
+4. **Mešani primeri.** En primer je preverjal pozitiven in negativen izid hkrati. Zahteval sem vsaj dva čista negativna primera.
+5. **Nepregledna oblika.** Vseh pet primerov je bilo v eni široki tabeli.
+
+**v2 → v3** (po povratni informaciji)
+
+6. **Napačen vir resnice.** V v2 sem agentu naročil, naj imena gumbov, sporočila in podatke preveri v izvorni kodi. Zato je pričakovane rezultate prepisal iz trenutnega delovanja aplikacije, tudi kadar je to napačno. Takšen test vedno uspe in ne more najti napake. V v3 je vir resnice samo dokumentacija, branje kode pa je prepovedano.
+7. **Preverjanje učinka namesto sporočila.** V v3 sem zahteval, da pričakovani rezultat preveri dejanski učinek zahteve v vmesniku. Pri predaji to pomeni, da je ticket pri drugem nivoju, prejemnik ima obvestilo in prejšnji lastnik ga nima več. Pojavitev sporočila o uspehu ne zadošča.
+8. **Sledljivost do zahteve.** Dodal sem atribut »vir zahteve«, ki navede stavek iz dokumentacije. Matrika je zdaj prava sledljivost od zahteve do testa.
+9. **Stanje po izvedbi skozi vmesnik.** V v2 je bilo zapisano z imeni tabel in stolpcev. V v3 je opisano tako, kot ga vidi tester.
+10. **Nejasna dokumentacija.** Zahteval sem, da agent našteje, kje je dokumentacija pomanjkljiva. Našel je 14 mest, na primer da dokumentacija ne opiše testnih podatkov semena, ne določa obveznih polj in ne pove, ali predaja gre nivoju ali osebi.
+
+### Kaj bi v testnih primerih spremenil sam
+
+1. **TP-03 ima še vedno dvojen pričakovani odziv** (»gumba ni ali je onemogočen ali pa je dejanje zavrnjeno«). Vzrok ni v ukazu, ampak v dokumentaciji, ki tega ne določa. Najprej bi dopolnil dokumentacijo (»uporabnik 1. nivoja gumba Zaključi ne vidi«), nato test.
+2. **TP-01 uporablja izdelek, ki ga ni v katalogu.** Ker dokumentacija kataloga ne našteje, je agent izbral »majica«. Dodal bi drugi primer z izdelkom iz kataloga, da se ločeno preveri vnos barve in velikosti. Ugotovitev iz izvedbe pa bi zapisal kot odstopanje od zahteve FUNK §1.
+3. **TP-02 bi dodal korak, ki preveri, da Eva ticket lahko prevzame** (»Prevzemi nase«) in da ga nato vidi v »Moja«. Šele s tem je predaja zaključena. Dodal bi tudi negativni primer: 1. nivo ne sme predati ticketa nazaj na isti nivo, če dokumentacija predajo res omejuje na »naslednji nivo«.
+4. **TP-04 ne preverja jezika odgovora.** FUNK §10 omenja »jezike pisem«. Dodal bi pričakovani rezultat, da je predloga v jeziku stranke, kar bi pokazalo odstopanje, ki sem ga opazil pri izvedbi.
+5. **TP-04 izbira pogovor med izvedbo** (»prvi povezan pogovor«). Dokumentacija semena ne opisuje, zato bi v `VZPOSTAVITEV.md` dodal kratek seznam testnih podatkov (kateri ticket je čigav, kateri pogovor je povezan). Primeri bi bili tako ponovljivi.
+6. **Predpogoji (zamenjava gesla, ustvarjanje ticketa)** so zahtevni za ročno izvedbo. Pri nadaljnjem testiranju bi jih avtomatiziral, na primer s pripravljenim stanjem baze.
+
+## 7. Uporabljena orodja umetne inteligence
+
+- **Claude Code** (Anthropic, model Claude Opus 5.5) kot programerski agent:
+  - po ukazih v1, v2 in v3 je ustvaril testne primere; vsak ukaz je dobil v ločeni seji brez drugega konteksta,
+  - pomagal mi je tudi pri pripravi ukazov, pri izvedbi primerov v brskalniku in pri oblikovanju tega dokumenta.
+
+## 8. Priloga: prejšnja ukaza
+
+### Ukaz v1
+
+```text
+Si tester programske opreme. V mapi C:\HelpdeskKopijaZaFaks je projekt HelpDesk – spletna aplikacija za podporo strankam spletne trgovine z oblačili (izmišljena trgovina Kroj). Opis funkcionalnosti je v docs/FUNKCIONALNOSTI.md, navodila za zagon in računi v docs/VZPOSTAVITEV.md.
+
+Naloga: oblikuj 5 testnih primerov za funkcionalno testiranje aplikacije.
+
+Vsak testni primer naj ima:
+- ID
+- naslov
+- predpogoje
+- korake
+- pričakovani rezultat
+
+Testni primeri naj pokrijejo različne funkcionalnosti aplikacije. Zapiši jih v slovenščini v obliki tabele Markdown. Datotek v projektu ne spreminjaj, rezultat samo vrni kot odgovor.
+```
+
+### Ukaz v2
 
 ```text
 Si tester programske opreme. V mapi C:\HelpdeskKopijaZaFaks je projekt HelpDesk – spletna aplikacija za podporo strankam spletne trgovine z oblačili (izmišljena trgovina Kroj). Opis funkcionalnosti je v docs/FUNKCIONALNOSTI.md (funkcionalnosti so oštevilčene 1–10), navodila za zagon in računi v docs/VZPOSTAVITEV.md.
@@ -53,248 +349,4 @@ Pravila:
 Oblika: v slovenščini, Markdown. Vsak testni primer kot svojo tabelo z dvema stolpcema (atribut | vrednost), koraki naj bodo v ločeni tabeli (# | korak | pričakovani odziv). Na koncu dodaj kratek seznam predpostavk, ki jih nisi mogel preveriti v kodi.
 ```
 
-## 3. Testni primeri (ustvaril agent)
-
-Vse vrednosti so preverjene v kodi. Na kopiji baze v začasni mapi sem pognal `prisma/seed.ts` in pregledal, kaj ustvari. V projektu nisem spremenil nobene datoteke.
-
-**Skupni predpogoj za vse primere:** aplikacija teče lokalno (`npm run dev`, http://localhost:3000), v `.env` velja privzeto `DEMO_PASSWORD` (`Kroj-Demo-2026`, preverjeno), pred vsakim primerom se požene `npm run db:seed`, vmesnik je v slovenščini (seme vsem nastavi `locale: "sl"`).
-
-
-### TP-01 – Odpiranje novega ticketa za novo naročilo
-
-| Atribut | Vrednost |
-|---|---|
-| ID | TP-01 |
-| Naslov | Administrator odpre ticket za naročilo #3001 z vrsto »Kakovost« |
-| Testirana funkcionalnost | 1 – Odpiranje ticketa |
-| Prioriteta | Visoka – brez odpiranja ticketov aplikacija ne opravlja svojega osnovnega namena. |
-| Vrsta | Pozitiven |
-| Predpogoji | Sveža baza. Naročilo #3001 ne obstaja (seme ima 31 ticketov, KRJ-1 … KRJ-31). Prijavljen je `Admin` (3. nivo, administrator, ob prijavi ne menja gesla). Odprta je stran **Tiketi** (`/orders`). |
-| Testni podatki | Vrsta težave: `Kakovost`; Št. naročila: `3001`; Naslov: `Raztrgan šiv na rokavu`; E-mail: `nova.stranka@example.com`; Kaj je stranka sporočila: `Po prvem nošenju se je šiv na levem rokavu raztrgal.`; Prevzame: `Administrator · 3. nivo (jaz)` (privzeto); Prioriteta: `Visoka`; Ime stranke: `Nova Stranka` |
-
-| # | Korak | Pričakovani odziv |
-|---|---|---|
-| 1 | V glavi klikni gumb **Nov ticket** (ali pritisni tipko N). | Odpre se predal z naslovom »Nov ticket« in podnaslovom »Obvezna sta številka naročila in vrsta težave.«. Kazalec je v polju »Št. naročila«. |
-| 2 | Pod »Vrsta težave« klikni gumb **Kakovost**. | Gumb »Kakovost« je označen kot izbran. Na izbiro so »Refund«, »Zamenjava«, »Preklic«, »Naslov«, »Tracking«, »Neodpremljeno«, »Kakovost« in »Drugo«. |
-| 3 | V »Št. naročila« vpiši `3001`, v »Naslov« `Raztrgan šiv na rokavu`, v »E-mail« `nova.stranka@example.com`. | Vrednosti so vpisane, opozoril ni. |
-| 4 | V »Kaj je stranka sporočila« vpiši besedilo iz testnih podatkov. | Besedilo je vpisano. |
-| 5 | V spustnem seznamu »Prioriteta« izberi **Visoka**. Pri »Prevzame« pusti privzeto vrednost. | Izbrano je »Visoka«, pri »Prevzame« ostane »Administrator · 3. nivo (jaz)«. |
-| 6 | Klikni **Podatki o stranki in pošiljki** in v »Ime stranke« vpiši `Nova Stranka`. | Razpre se razdelek s polji o stranki, ime je vpisano. |
-| 7 | Klikni **Odpri naročilo**. | Gumb za trenutek pokaže »Odpiram…«. Pogovorno okno »Ustvarim brez podatkov stranke?« se ne prikaže, ker sta e-mail in ime vpisana. Aplikacija preusmeri na stran novega ticketa `/orders/KRJ-<n>`. |
-| 8 | Preglej stran ticketa. | Naslov je »Raztrgan šiv na rokavu«. Lastnik je »Administrator« s pripisom »jaz« in podnapisom »3. nivo · trenutno obravnava«. Status je »V delu«, oznaka nivoja »L3«. V niti sta vnosa »Administrator je odprl naročilo.« in komentar z besedilom iz koraka 4. |
-
-| Atribut | Vrednost |
-|---|---|
-| Končni pričakovani rezultat | Ustvarjen je ticket za naročilo #3001 s ključem oblike `KRJ-<n>`, statusom »V delu«, na 3. nivoju, z lastnikom Administrator. |
-| Stanje po izvedbi | V tabeli `Issue` je nova vrstica: `orderNumber=3001`, `orderNumberKey=3001`, `type=quality`, `priority=high`, `status=open`, `level=3`, `assigneeId` in `reporterId` sta oba Admin, `title`, `customerEmail` in `customerName` so vpisani. V tabeli `Event` sta dva nova vnosa (`created` in `comment`). Obvestila ni, ker je prevzemnik avtor sam. |
-
-
-### TP-02 – Predaja ticketa 2. nivoju z obvestilom prejemniku
-
-| Atribut | Vrednost |
-|---|---|
-| ID | TP-02 |
-| Naslov | Nina (1. nivo) preda ticket #2125 2. nivoju; Eva dobi obvestilo v zvoncu |
-| Testirana funkcionalnost | 2 – Predaja ticketa višjemu nivoju |
-| Prioriteta | Visoka – predaja je osrednji tok dela po nivojih. Če ne deluje, ticket obtiči na 1. nivoju, ki ga ne sme zaključiti. |
-| Vrsta | Pozitiven |
-| Predpogoji | Sveža baza. Ticket **KRJ-15** (naročilo #2125, »Stranka prosi za refund«, vrsta Refund, artikel Kroj Merino Long Sleeve Gray / S z rešitvijo »Vračilo«) ima status »V delu«, je na 1. nivoju, lastnica je Nina Vidmar. `nina` in `eva` imata `mustChangePw = true`. Nihče ni prijavljen. V tabeli `Notification` ni zapisov (preverjeno po semenu: 0). |
-| Testni podatki | Prijava `nina` / `Kroj-Demo-2026`, novo geslo `Nina-Test-2026!`. Komentar predaje: `Stranka je poslala fotografije, prosim za odobritev refunda 59 EUR.` Prijava `eva` / `Kroj-Demo-2026`, novo geslo `Eva-Test-2026!` |
-
-| # | Korak | Pričakovani odziv |
-|---|---|---|
-| 1 | Na `/login` vpiši »Uporabniško ime« `nina` in »Geslo« `Kroj-Demo-2026`, klikni **Prijava**. | Aplikacija preusmeri na `/geslo` z naslovom »Zamenjaj geslo« in besedilom »Ob prvi prijavi je treba nastaviti lastno geslo.«. |
-| 2 | Vpiši »Trenutno geslo« `Kroj-Demo-2026`, »Novo geslo« in »Ponovi novo geslo« `Nina-Test-2026!`, klikni **Shrani geslo**. | Vse zahteve za geslo so izpolnjene. Aplikacija preusmeri na `/orders`. |
-| 3 | Odpri `http://localhost:3000/orders/KRJ-15` (ali klikni ploščico #2125). | Prikaže se ticket #2125. Lastnica je »Nina Vidmar · jaz«. Vidni so gumbi »Na čakanje« in »Predaj naprej«, gumba »Zaključi« ni. Pod vrstico je besedilo »Zaključi lahko 2. nivo ali višji — ko končaš svoj del, predaj naprej.«. |
-| 4 | Klikni **Predaj naprej**. | Odpre se plošča s poljem »Predaj komu«. Privzeto je izbrano »2. nivo — obvesti vse«. Pod poljem je namig »Pri predaji nivoju naročilo ostane nedodeljeno, dokler ga nekdo s tega nivoja ne prevzame.«. |
-| 5 | V polje »Kaj si naredil in kaj mora narediti naslednji…« vpiši komentar iz testnih podatkov in klikni gumb **Predaj naprej** v plošči. | Gumb za trenutek pokaže »Predajam…«, nato se plošča zapre. Glava pokaže »2. nivo« s podnapisom »čaka, da ga nekdo s tega nivoja prevzame«, oznako »L2«, status »V delu« in gumb »Prevzemi nase«. V niti je nov vnos »Nina Vidmar je predal → L2«, pod njim je vpisani komentar. |
-| 6 | Odpri uporabniški meni, klikni **Odjava**, nato se prijavi kot `eva` / `Kroj-Demo-2026` in zamenjaj geslo v `Eva-Test-2026!` (kot v korakih 1–2). | Po zamenjavi gesla se odpre `/orders`. Na ikoni zvonca je rdeča številka »1«. |
-| 7 | Klikni ikono zvonca (Obvestila). | Odpre se seznam »Obvestila« z enim vnosom »#2125 · Nina Vidmar« in predogledom »Stranka je poslala fotografije, prosim za odobritev refunda 59 EUR.«. |
-| 8 | Klikni ta vnos. | Odpre se ticket `/orders/KRJ-15`. |
-
-| Atribut | Vrednost |
-|---|---|
-| Končni pričakovani rezultat | Ticket #2125 je na 2. nivoju brez lastnika, status je »V delu«. Eva ima v zvoncu obvestilo »#2125 · Nina Vidmar« s komentarjem predaje. |
-| Stanje po izvedbi | `Issue` KRJ-15: `assigneeId=null`, `level=2`, `status=open`. V `Event` je nov vnos `kind=assign`, `fromValue="Nina Vidmar"`, `toValue="L2"`, `body` je komentar, `outsider=false`. V `Notification` je en zapis za Evo (`kind=handoff`, `actorName="Nina Vidmar"`). `User` nina in eva: novi `passwordHash`, `mustChangePw=false`. V `Session` so nove seje. |
-
-
-### TP-03 – Zaključevanje refunda brez potrditve vračila
-
-| Atribut | Vrednost |
-|---|---|
-| ID | TP-03 |
-| Naslov | Eva (2. nivo) poskusi zaključiti refund #1690, ne da bi potrdila, da je vračilo prispelo |
-| Testirana funkcionalnost | 3 – Zaključevanje ticketa |
-| Prioriteta | Visoka – varovalka preprečuje refund ali zaprtje primera, preden je paket nazaj, kar bi pomenilo neposredno finančno izgubo. |
-| Vrsta | Negativen |
-| Predpogoji | Sveža baza. Ticket **KRJ-3** (naročilo #1690, »Vračilo prejeto — stranka čaka refund«, vrsta Refund, artikel Kroj Rain Jacket Yellow / M z rešitvijo »Vračilo«) ima status »V delu«, je na 2. nivoju, lastnica je Eva Kranjc. Nihče ni prijavljen, `eva` ima `mustChangePw = true`. |
-| Testni podatki | Prijava `eva` / `Kroj-Demo-2026`, novo geslo `Eva-Test-2026!`. Opomba ob zaključku: `Refund 119 EUR izveden.` Potrditveno polje ostane **neoznačeno**. |
-
-| # | Korak | Pričakovani odziv |
-|---|---|---|
-| 1 | Prijavi se kot `eva` / `Kroj-Demo-2026` in na `/geslo` nastavi novo geslo `Eva-Test-2026!` (»Shrani geslo«). | Aplikacija preusmeri na `/orders`. |
-| 2 | Odpri `http://localhost:3000/orders/KRJ-3`. | Prikaže se ticket #1690. Lastnica je »Eva Kranjc · jaz«, status »V delu«, oznaka »L2«. Vidni so gumbi »Na čakanje«, »Predaj naprej« in »Zaključi«. |
-| 3 | Klikni **Zaključi**. | Odpre se plošča z neoznačenim potrditvenim poljem »Potrjujem, da je vračilo prispelo oz. da vračilo ni bilo potrebno.« in pripisom »Nazaj pride: Kroj Rain Jacket Yellow / M«. Pod tem so polje »Kako je bilo rešeno (znesek refunda, tracking zamenjave…)«, »Dokazilo« ter gumba »Prekliči« in »Zaključi in arhiviraj«. |
-| 4 | Potrditvenega polja ne označi. V polje za opis rešitve vpiši `Refund 119 EUR izveden.` | Besedilo je vpisano, polje ostane neoznačeno. |
-| 5 | Klikni **Zaključi in arhiviraj**. | Gumb za trenutek pokaže »Zaključujem…«. Plošča ostane odprta in v njej se pokaže napaka **»Potrdi, da je vračilo prispelo oz. da vračilo ni potrebno.«** |
-| 6 | Osveži stran (F5). | Status je še vedno »V delu«, oznaka »L2«. V niti ni vnosa o zaključku. |
-
-| Atribut | Vrednost |
-|---|---|
-| Končni pričakovani rezultat | Aplikacija zavrne zaključek s sporočilom »Potrdi, da je vračilo prispelo oz. da vračilo ni potrebno.«. Ticket #1690 ostane odprt (»V delu«) in ne gre v Arhiv. |
-| Stanje po izvedbi | `Issue` KRJ-3 je nespremenjen (`status=open`, `closedAt=null`, `archivedAt=null`). V `Event` ni novega vnosa. Spremenita se le `User` eva (novo geslo, `mustChangePw=false`) in `Session`. |
-
-
-### TP-04 – Odgovor stranki iz zavihka Prejeto
-
-| Atribut | Vrednost |
-|---|---|
-| ID | TP-04 |
-| Naslov | Administrator v Prejetem odgovori stranki Lari Vzorčni na pogovor o naročilu #2125 |
-| Testirana funkcionalnost | 4 – Pregled pošte in odgovor stranki |
-| Prioriteta | Visoka – komunikacija s stranko je glavni vhod in izhod podpore. Napaka pomeni neodgovorjene stranke. |
-| Vrsta | Pozitiven |
-| Predpogoji | Sveža baza. V Prejetem je v pogledu »Odprto« pogovor »Vračilo — naročilo #2125« s stranko Lara Vzorčni (`lara.vzorcni@example.com`). Pogovor je povezan s ticketom KRJ-15, ima 3 sporočila (zadnje je od stranke), nima dodeljenega uporabnika in ima status `open`. Prijavljen je `Admin`. |
-| Testni podatki | Besedilo odgovora: `Pozdravljeni, paket smo prejeli. Refund 59 EUR bo izveden v 3 delovnih dneh. Lep pozdrav, Kroj` |
-
-| # | Korak | Pričakovani odziv |
-|---|---|---|
-| 1 | V glavi klikni **Prejeto**. | Odpre se stran »Prejeto« z izbranim pogledom »Odprto«. Na voljo so pogledi »Odprto«, »Moje«, »Nedodeljeno«, »Čakamo«, »Brez ticketa«, »Zaključeno«, »Vse«. |
-| 2 | Na seznamu klikni pogovor **Lara Vzorčni** z zadevo »Vračilo — naročilo #2125«. | V sredini se pokaže glava »Vračilo — naročilo #2125« s podnapisom »Lara Vzorčni · #2125« in tri sporočila. Desno je »#2125« s povezavo »Odpri ticket«. Pod sporočili sta »Hitri odgovori« (»Navodila za vračilo«, »Vračilo + refund/menjava«) in gumb »Pošlji kot Ana«. |
-| 3 | Klikni v polje za odgovor, izbriši predizpolnjeno besedilo (Ctrl+A, Delete) in vpiši besedilo iz testnih podatkov. | V polju je samo vpisano besedilo. |
-| 4 | Klikni **Pošlji kot Ana**. | Stran se osveži in nad urejevalnikom se pokaže zeleno sporočilo **»Odgovor je bil poslan iz podpora@kroj.example.«**. Odgovor je zadnji (desno poravnan) v pogovoru. |
-| 5 | Klikni pogled **Čakamo**. | Pogovor Lara Vzorčni je na seznamu. Predogled se začne z »↗ Pozdravljeni, paket smo prejeli…«, dodeljen je »Administrator«. V pogledu »Odprto« ga ni več. |
-| 6 | Desno klikni **Odpri ticket**. | Odpre se KRJ-15. V niti je vnos »Administrator je stranki poslal/a pismo o nadomestku lara.vzorcni@example.com · Re: Vračilo — naročilo #2125«. Lastnica ticketa je še vedno Nina Vidmar. |
-
-| Atribut | Vrednost |
-|---|---|
-| Končni pričakovani rezultat | Odgovor je zapisan v pogovor, pogovor preide v pogled »Čakamo«, aplikacija pokaže »Odgovor je bil poslan iz podpora@kroj.example.«. |
-| Stanje po izvedbi | `DemoMail`: nova vrstica `direction=outgoing`, z istim `threadId` kot pogovor, `subject="Re: Vračilo — naročilo #2125"`. `CustomerEmailDraft`: nov zapis `status=sent`. `InboxConversation`: `status=waiting`, `lastDirection=outgoing`, `assigneeId=Admin`. `InboxSeen`: zapis za Admina. `Event`: nov vnos na KRJ-15, `kind=system`, `field=customer_email`, `toValue=sent`. `Issue` KRJ-15: `assigneeId` ostane Nina. |
-
-
-### TP-05 – Ustvarjanje uporabnika z že zasedenim uporabniškim imenom
-
-| Atribut | Vrednost |
-|---|---|
-| ID | TP-05 |
-| Naslov | Administrator poskusi ustvariti novega uporabnika z uporabniškim imenom `nina` |
-| Testirana funkcionalnost | 8 – Upravljanje uporabnikov |
-| Prioriteta | Srednja – ne blokira dnevnega dela. Podvojen račun pa bi zrušil prijavo in sledljivost (kdo je kaj naredil), zato je preverjanje pomembno za pravice. |
-| Vrsta | Negativen |
-| Predpogoji | Sveža baza s 6 uporabniki (Admin, gost, nina, ali, eva, marko), vsi aktivni. Uporabnik `nina` obstaja. Prijavljen je `Admin`. |
-| Testni podatki | Ime in priimek: `Nina Dvojnik`; E-mail: prazno; Jezik: `Slovenščina`; Uporabniško ime: `nina`; Nivo: `1. nivo`; Administrator: neoznačeno; Začetno geslo: `Zacetno-Geslo-1` |
-
-| # | Korak | Pričakovani odziv |
-|---|---|---|
-| 1 | V glavi klikni **Nadzorna plošča**. | Odpre se `/admin` z izbranim zavihkom »Uporabniki«. Napis kaže »6 aktivnih · 6 skupaj«, vidni so gumb »Dodaj uporabnika« in zavihki »Seje« ter »Dejavnost«. |
-| 2 | Klikni **Dodaj uporabnika**. | Odpre se predal »Nov uporabnik« s podnapisom »Geslo določiš ti; uporabnik si ga ob prvi prijavi zamenja.«. |
-| 3 | Vpiši »Ime in priimek« `Nina Dvojnik`, pri »Jezik« izberi `Slovenščina`, v »Uporabniško ime« vpiši `nina`, pri »Nivo« pusti »1. nivo«. | Vrednosti so vpisane. Pod uporabniškim imenom je namig »Črke, številke in . _ -«. |
-| 4 | V »Začetno geslo« vpiši `Zacetno-Geslo-1`. | Vseh pet zahtev za geslo je izpolnjenih (vsaj 8 znakov, velika in mala črka, številka, poseben znak). |
-| 5 | Klikni **Ustvari**. | Gumb za trenutek pokaže »Ustvarjam…«. Predal ostane odprt in v njem se pokaže napaka **»To uporabniško ime je že zasedeno.«** |
-| 6 | Klikni **Prekliči** in preglej seznam uporabnikov. | Napis še vedno kaže »6 aktivnih · 6 skupaj«, uporabnika »Nina Dvojnik« ni. |
-
-| Atribut | Vrednost |
-|---|---|
-| Končni pričakovani rezultat | Aplikacija zavrne ustvarjanje s sporočilom »To uporabniško ime je že zasedeno.«. Število uporabnikov ostane 6. |
-| Stanje po izvedbi | Tabela `User` je nespremenjena (6 vrstic). Obstoječi `nina` ima nespremenjene `name`, `passwordHash`, `level` in `mustChangePw`. |
-
-
-### Predpostavke in ugotovitve, ki jih v kodi nisem mogel v celoti preveriti
-
-1. **Številka ključa novega ticketa (TP-01) ni stalna.** Ključ se tvori kot `KRJ-<id>` (`src/lib/actions/issues.ts`). Prisma na SQLite uporablja `AUTOINCREMENT`, `db:seed` pa števca ne ponastavi. Ključ je `KRJ-32` samo po prvem `npm run setup` na prazni bazi, po vsakem ponovnem `db:seed` je višji. Zato je v TP-01 pričakovan samo ključ oblike `KRJ-<n>`.
-2. **Postavitev in uvrstitev pogovorov v Prejetem (TP-04)** sem preveril na kopiji baze, ki sem jo napolnil s semenom. Časi sporočil so relativni glede na trenutek semena, zato se lahko vrstni red na seznamu razlikuje. Pogovor je treba iskati po imenu »Lara Vzorčni«.
-3. **Napis »Pošlji kot Ana« je fiksno zapisan** v `InboxWorkspace.tsx` in se ne spreminja glede na prijavljenega uporabnika. Uporabnika Ana v semenu ni. Najverjetneje je to napaka v besedilu vmesnika, ki je ostala iz izvornega sistema.
-4. **Vnos v niti po odgovoru iz Prejetega** se glasi »je stranki poslal/a pismo o nadomestku«, tudi pri navadnem odgovoru, ki z nadomestkom nima zveze (`thread.customerEmail.sent`). Verjetno je to napaka v besedilu.
-5. **Predizpolnjeno besedilo odgovora (TP-04)** pride iz `/api/inbox/[id]` in ga nisem preverjal dobesedno. Zato korak zahteva, da se izbriše.
-6. **Brez dodajanja artiklov (TP-01).** Urejevalnik artiklov (`ItemsEditor.tsx`) dela s katalogom, zato sem ga izpustil. Odpiranje z artikli bi bilo vredno pokriti z dodatnim primerom.
-7. **Napake se prikažejo v elementu `Notice`.** Natančnega mesta in barve na zaslonu nisem preverjal v brskalniku, samo besedilo in komponento.
-8. **Neznan uporabnik ob prijavi dobi sporočilo v angleščini** (»Invalid username or password.«), ker `login()` takrat uporabi jezik `en`. Napačno geslo za obstoječega uporabnika vrne slovensko »Napačno uporabniško ime ali geslo.«. Tega ni v nobenem primeru, je pa kandidat za dodaten negativni primer.
-9. **Edinstvenost uporabniškega imena** se preverja z `findUnique` na SQLite, kar je občutljivo na velike in male črke. `Nina` bi se verjetno ustvaril kljub obstoječemu `nina`. Tega v vmesniku nisem preveril.
-10. **Začetno stanje obvestil (TP-02):** na moji kopiji je bila tabela `Notification` po semenu prazna. Predpostavljam, da v času izvajanja testa nobeno ozadno opravilo ne ustvari novih obvestil.
-
-## 4. Matrika povezav funkcionalnosti in testnih primerov
-
-Funkcionalnosti so oštevilčene po `docs/FUNKCIONALNOSTI.md`.
-● – testni primer funkcionalnost neposredno preverja.
-○ – testni primer se funkcionalnosti dotakne v predpogojih ali vmesnih korakih.
-
-| Funkcionalnost | Kratek opis | TP-01 | TP-02 | TP-03 | TP-04 | TP-05 |
-|---|---|:-:|:-:|:-:|:-:|:-:|
-| 1 Odpiranje ticketa | vnos številke naročila, vrste težave, stranke; ticket dobi ključ `KRJ-n` | ● | | | | |
-| 2 Predaja ticketa višjemu nivoju | predaja s komentarjem, obvestilo prejemniku v zvoncu | | ● | | | |
-| 3 Zaključevanje ticketa | samo nivo ≥ 2; pri vračilu mora biti potrjeno, da je paket prispel | | ○ | ● | | |
-| 4 Pregled pošte in odgovor stranki | Prejeto, odgovor stranki, povezava pogovora s ticketom | | | | ● | |
-| 8 Upravljanje uporabnikov | administrator ustvari račun z nivojem, jezikom in začetnim geslom | | ○ | ○ | | ● |
-| Dodatno: obvestila v zvoncu | obvestilo ob predaji | | ● | | | |
-
-Kaj pomenijo oznake ○:
-- **TP-02 → 3:** TP-02 preveri, da uporabnik 1. nivoja nima gumba »Zaključi«.
-- **TP-02, TP-03 → 8:** oba primera izvedeta obvezno zamenjavo gesla ob prvi prijavi. To pravilo velja za račune, ki jih ustvari administrator.
-
-Ti primeri ne pokrivajo funkcionalnosti 5 (rezervacija paketa iz zaloge), 6 (naročilo pri dobavitelju), 7 (zadovoljstvo strank), 9 (katalog izdelkov) in 10 (nastavitve).
-
-| Testni primer | Funkcionalnost | Vrsta | Prioriteta | Rezultat izvedbe (19. 10. 2026) |
-|---|---|---|---|---|
-| TP-01 | 1 Odpiranje ticketa | pozitiven | visoka | uspešen |
-| TP-02 | 2 Predaja ticketa | pozitiven | visoka | uspešen |
-| TP-03 | 3 Zaključevanje ticketa | negativen | visoka | uspešen |
-| TP-04 | 4 Pošta in odgovor stranki | pozitiven | visoka | uspešen |
-| TP-05 | 8 Upravljanje uporabnikov | negativen | srednja | uspešen |
-
-## 5. Komentar
-
-### Kaj sem moral popraviti v ukazu (v1 → v2)
-
-Prvi ukaz je bil kratek: kontekst, »5 testnih primerov«, pet atributov (ID, naslov, predpogoji, koraki, pričakovani rezultat) in ena tabela. Rezultat je bil na prvi pogled dober, pri pregledu pa sem našel te težave:
-
-1. **Premalo atributov.** Manjkali so testirana funkcionalnost (brez nje ni matrike), prioriteta, vrsta (pozitiven ali negativen), testni podatki in stanje po izvedbi. Pričakovani rezultat je bil samo na koncu, ne pri posameznih korakih. V v2 sem atribute naštel po ISO/IEC/IEEE 29119-3.
-2. **Nedoločeni ali izmišljeni podatki.** Koraki so bili na primer »vpiši podatke stranke«, »npr. 5001« ali »odprt ticket (npr. iz TP-01)«. V v2 sem zahteval konkretne vrednosti in samo podatke, ki res obstajajo v semenu baze (`prisma/seed.ts`).
-3. **Napačen predpogoj zaradi dokumentacije.** Agent se je zanesel na `docs/VZPOSTAVITEV.md`, kjer piše, da geslo ob prvi prijavi zamenjata samo `nina` in `ali`. Seme to zahteva tudi od `eva` in `marko`, zato se primeri z Evo ne bi dali izvesti, kot so bili zapisani. V v2 sem zahteval, da agent nastavitve uporabnikov preveri v semenu. Napako v dokumentaciji sem popravil.
-4. **Napačna imena v vmesniku.** V v1 je bil korak »Shrani ticket«, gumb pa se imenuje »Odpri naročilo«. Po ustvarjanju se ticket ni »pokazal kot kvadrat v mreži«, ampak se je odprla njegova stran. Ustvaritev uporabnika je imela »jezik slovenščina«, obrazec pa ima privzeto English, začetnega gesla pa primer sploh ni omenil. V v2 sem zahteval, da agent imena preveri v slovenskem slovarju vmesnika in v komponentah.
-5. **Dvoumen pričakovani rezultat.** V v1 je pisalo »gumba ni ali pa je dejanje zavrnjeno«. Tak test ne more pasti. V v2 sem zahteval en preverljiv izid. Pravilno je, da gumba »Zaključi« ni, namesto njega pa je besedilo »Zaključi lahko 2. nivo ali višji — ko končaš svoj del, predaj naprej.«.
-6. **Mešani in odvisni primeri.** TP-03 in TP-05 iz v1 sta v enem primeru preverjala dve stvari (pozitiven in negativen izid, ustvarjanje uporabnika in pravice gosta). TP-02 je potreboval ticket iz TP-01. V v2 sem zahteval neodvisne primere na sveži bazi in vsaj dva negativna primera z natančnim sporočilom o napaki.
-7. **Nepregledna oblika.** V v1 je bilo vseh pet primerov v eni široki tabeli s koraki, ločenimi z `<br>`. V v2 ima vsak primer svojo tabelo atributov in tabelo korakov.
-
-### Pregled rezultata v2
-
-Vseh pet primerov sem izvedel v lokalni aplikaciji na sveži bazi. Imena gumbov, sporočila in prehodi se ujemajo z zapisanimi, vseh pet primerov je uspešnih. Agent je pri pregledu kode sam opazil nekaj sumljivih stvari (seznam predpostavk na koncu poglavja 3) in pri izvedbi sem jih potrdil.
-
-### Kaj bi v testnih primerih spremenil sam
-
-1. **Pričakovani rezultati so prepisani iz kode, ne iz zahtev.** Agent je pričakovane rezultate razbral iz trenutne kode, zato je napake zapisal kot pravilno delovanje. Test bi zato uspel tudi takrat, ko aplikacija dela narobe. Primeri:
-   - gumb »Pošlji kot Ana« (TP-04), čeprav uporabnik Ana ne obstaja,
-   - vnos »pismo o nadomestku« po navadnem odgovoru stranki (TP-04),
-   - »Nina Vidmar je predal« namesto »je predala« (TP-02).
-
-   Pričakovani rezultat bi zapisal po zahtevah, na primer gumb »Pošlji« ali ime prijavljenega uporabnika. Te tri stvari bi prijavil kot napake.
-2. **Stanje po izvedbi je zapisano z imeni tabel in stolpcev** (`Issue.assigneeId`, `Notification` …). Pri ročnem testiranju skozi vmesnik tega ne vidim. Zapisal bi, kako se stanje preveri v aplikaciji, na primer da je ticket pri Evi v zavihku »Moj nivo«.
-3. **Zamenjava gesla je del korakov.** V TP-02 in TP-03 je zamenjava gesla ob prvi prijavi med koraki, čeprav ni predmet testa. Prestavil bi jo v skupni predpogoj (gesla demo računov so že zamenjana) ali iz nje naredil ločen testni primer.
-4. **Jezik prijavne strani.** Prijavna stran se pokaže v jeziku brskalnika: pri angleškem brskalniku sta polji »Username« in »Password« ter gumb »Sign in«. Koraka »Uporabniško ime« in »Prijava« torej ne držita vedno. Dodal bi predpogoj, da je brskalnik nastavljen na slovenščino.
-5. **TP-01 je preozek.** Ne doda artikla, čeprav so artikli z rešitvijo (vračilo ali menjava) bistveni del ticketa. Dodal bi korak z artiklom in zneskom ter preverjanje vrstice »Za povrniti: … €«. Ticket v primeru odpre administrator (3. nivo), v praksi pa tickete odpira 1. nivo, zato bi uporabil račun `nina`.
-6. **TP-05 bi razširil.** Dodal bi robni primer z uporabniškim imenom `Nina` (velike in male črke), ki ga je agent omenil, a ga ni preveril. V pričakovani rezultat bi dodal, da vpisani podatki po napaki ostanejo v obrazcu. Pri izvedbi se je obrazec po napaki izpraznil (ime, uporabniško ime, jezik), ostalo je samo geslo. To je težava uporabnosti, ki jo test v sedanji obliki spregleda.
-7. **Manjka primer za pravice**, na primer da račun `gost` (administrator samo za ogled) ne more spreminjati uporabnikov. V tej aplikaciji je to ena pomembnejših zahtev.
-
-## 6. Uporabljena orodja umetne inteligence
-
-- **Claude Code** (Anthropic, model Claude Opus 5.5) kot programerski agent:
-  - po ukazu v1 in v2 je ustvaril testne primere; vsak ukaz je dobil v ločeni seji brez drugega konteksta, z dostopom samo za branje do repozitorija,
-  - pomagal mi je tudi pri pripravi ukazov, pri pregledu rezultatov (primerjava s kodo in izvedba primerov v brskalniku) in pri oblikovanju tega dokumenta.
-
-## 7. Priloga: prvi ukaz (v1)
-
-```text
-Si tester programske opreme. V mapi C:\HelpdeskKopijaZaFaks je projekt HelpDesk – spletna aplikacija za podporo strankam spletne trgovine z oblačili (izmišljena trgovina Kroj). Opis funkcionalnosti je v docs/FUNKCIONALNOSTI.md, navodila za zagon in računi v docs/VZPOSTAVITEV.md.
-
-Naloga: oblikuj 5 testnih primerov za funkcionalno testiranje aplikacije.
-
-Vsak testni primer naj ima:
-- ID
-- naslov
-- predpogoje
-- korake
-- pričakovani rezultat
-
-Testni primeri naj pokrijejo različne funkcionalnosti aplikacije. Zapiši jih v slovenščini v obliki tabele Markdown. Datotek v projektu ne spreminjaj, rezultat samo vrni kot odgovor.
-```
-
-Rezultat ukaza v1 je v repozitoriju: `docs/naloga2/rezultat-v1.md`.
+Rezultati vseh treh ukazov so v repozitoriju: `docs/naloga2/rezultat-v1.md`, `rezultat-v2.md`, `rezultat-v3.md`.
