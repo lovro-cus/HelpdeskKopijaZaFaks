@@ -39,6 +39,9 @@ import { labelOf } from "@/lib/config/shared";
 import { canAccessShipg, canClose, entryStance } from "@/lib/domain";
 import { replyCue } from "@/lib/reply-cue";
 import { StarButton } from "@/components/StarButton";
+import { DemoResetButton } from "@/components/DemoResetButton";
+import { seedNumberOf } from "@/lib/demo-seed";
+import { isSandbox } from "@/lib/sandbox";
 import { aiConfigured } from "@/lib/groq";
 import { translationConfigured } from "@/lib/translation";
 import { shopifyConfigured } from "@/lib/shopify";
@@ -260,6 +263,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
         <LevelPill level={issue.level} muted={issue.status === "closed"} />
         <PriorityDot priority={issue.priority} withLabel />
         <div className="ml-auto flex items-center gap-3">
+          {isSandbox() && seedNumberOf(issue.key) && <DemoResetButton issueId={issue.id} />}
           <span className="text-[12px] text-label-2">
             {issue.closedAt ? t(me.locale, "issue.archived") : t(me.locale, "issue.openDays", { days: daysOpen(issue.createdAt) })}
           </span>
