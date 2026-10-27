@@ -62,6 +62,12 @@
   ul { margin: 0; padding-left: 18px; }
   li { margin: 0 0 10px; line-height: 1.45; font-size: clamp(15px, 1.5vw, 19px); }
   li:last-child { margin-bottom: 0; }
+  a.show {
+    display: inline-block; margin-left: 4px; font-family: var(--mono); font-size: 12px;
+    letter-spacing: .04em; color: var(--accent); text-decoration: none; white-space: nowrap;
+    border-bottom: 1px dashed rgba(108,199,214,.5);
+  }
+  a.show:hover { border-bottom-style: solid; }
 
   .sum {
     margin-top: 18px; padding: 14px 18px; border-left: 3px solid var(--accent);
@@ -106,9 +112,9 @@
     <p class="en">Visibility of System Status</p>
     <div class="cols">
       <div class="card issues"><h3>Težave</h3><ul>
-        <li>Ni potrditev po ustvarjanju uporabnika, brisanju ali spremembi statusa.</li>
-        <li>Manjkajo indikatorji nalaganja.</li>
-        <li>Status in prioriteta na kartici sta prikazana samo z barvo in razvidna šele ob premiku miške.</li>
+        <li>Ni potrditev po ustvarjanju uporabnika, brisanju ali spremembi statusa. <a class="show" href="/admin" target="_blank" rel="noopener">Nadzorna plošča ↗</a></li>
+        <li>Manjkajo indikatorji nalaganja. <a class="show" href="/orders?view=all" target="_blank" rel="noopener">Tiketi – preklop zavihkov ↗</a></li>
+        <li>Status in prioriteta na kartici sta prikazana samo z barvo in razvidna šele ob premiku miške. <a class="show" href="/orders?view=all" target="_blank" rel="noopener">Vsa odprta ↗</a></li>
       </ul></div>
       <div class="card fix"><h3>Predlogi</h3><ul>
         <li>Dodati obvestila o uspešno izvedenih dejanjih in indikatorje nalaganja.</li>
@@ -123,9 +129,9 @@
     <p class="en">Match Between System and the Real World</p>
     <div class="cols">
       <div class="card issues"><h3>Težave</h3><ul>
-        <li>Nejasna imena »Prejeto«, »Moja 1« in »Moj nivo 2«.</li>
-        <li>Angleški izrazi (Refund, Tracking) in kratice L1–L3.</li>
-        <li>Neenotna izraza »Tiketi« in »Naročila«.</li>
+        <li>Nejasna imena »Prejeto«, »Moja 1« in »Moj nivo 2«. <a class="show" href="/orders" target="_blank" rel="noopener">Tiketi ↗</a></li>
+        <li>Angleški izrazi (Refund, Tracking) in kratice L1–L3. <a class="show" href="/orders?view=all" target="_blank" rel="noopener">Vsa odprta ↗</a></li>
+        <li>Neenotna izraza »Tiketi« in »Naročila«. <a class="show" href="/orders" target="_blank" rel="noopener">Tiketi ↗</a></li>
       </ul></div>
       <div class="card fix"><h3>Predlogi</h3><ul>
         <li>Jasneje poimenovati zavihke glede na njihovo vsebino.</li>
@@ -141,9 +147,9 @@
     <p class="en">User Control and Freedom</p>
     <div class="cols">
       <div class="card issues"><h3>Težave</h3><ul>
-        <li>Brisanja uporabnika in odjave druge osebe ni mogoče razveljaviti.</li>
-        <li>Podatkov odposlane pošiljke ni mogoče popraviti; vrnitev nazaj ni vedno jasna.</li>
-        <li>Objavljenih komentarjev v časovnici ni mogoče urejati ali brisati.</li>
+        <li>Brisanja uporabnika in odjave druge osebe ni mogoče razveljaviti. <a class="show" href="/admin" target="_blank" rel="noopener">Nadzorna plošča ↗</a></li>
+        <li>Podatkov odposlane pošiljke ni mogoče popraviti; vrnitev nazaj ni vedno jasna. <a class="show" href="/dobavitelj" target="_blank" rel="noopener">Dobavitelj ↗</a></li>
+        <li>Objavljenih komentarjev v časovnici ni mogoče urejati ali brisati. <a class="show" href="/orders/KRJ-1" target="_blank" rel="noopener">Naročilo #1140 ↗</a></li>
       </ul></div>
       <div class="card fix"><h3>Predlogi</h3><ul>
         <li>Omogočiti obnovitev uporabnika, popravljanje pošiljke in začasni »Razveljavi«.</li>
@@ -159,9 +165,9 @@
     <p class="en">Consistency and Standards</p>
     <div class="cols">
       <div class="card issues"><h3>Težave</h3><ul>
-        <li>V vmesniku se mešata slovenščina in angleščina.</li>
-        <li>Isti statusi imajo različne oznake (OPEN / V delu, URGENT / Nujno).</li>
-        <li>Imena izdelkov niso jezikovno enotna.</li>
+        <li>V vmesniku se mešata slovenščina in angleščina. <a class="show" href="/inbox" target="_blank" rel="noopener">Prejeto ↗</a></li>
+        <li>Isti statusi imajo različne oznake (OPEN / V delu, URGENT / Nujno). <a class="show" href="/inbox" target="_blank" rel="noopener">Prejeto ↗</a></li>
+        <li>Imena izdelkov niso jezikovno enotna. <a class="show" href="/orders/KRJ-1" target="_blank" rel="noopener">Naročilo #1140 ↗</a></li>
       </ul></div>
       <div class="card fix"><h3>Predlogi</h3><ul>
         <li>Poenotiti jezik celotnega vmesnika.</li>
@@ -176,9 +182,9 @@
     <p class="en">Error Prevention</p>
     <div class="cols">
       <div class="card issues"><h3>Težave</h3><ul>
-        <li>Pri večini nepovratnih dejanj manjkajo opozorila (potrditev ima le brisanje uporabnika).</li>
-        <li>Znesek in količina sta prosti besedilni polji.</li>
-        <li>Številko naročila je mogoče pomotoma spremeniti.</li>
+        <li>Pri večini nepovratnih dejanj manjkajo opozorila (potrditev ima le brisanje uporabnika). <a class="show" href="/urejanje" target="_blank" rel="noopener">Urejanje ↗</a></li>
+        <li>Znesek in količina sta prosti besedilni polji. <a class="show" href="/orders/KRJ-1" target="_blank" rel="noopener">Naročilo #1140 ↗</a></li>
+        <li>Številko naročila je mogoče pomotoma spremeniti. <a class="show" href="/orders/KRJ-1" target="_blank" rel="noopener">Naročilo #1140 ↗</a></li>
       </ul></div>
       <div class="card fix"><h3>Predlogi</h3><ul>
         <li>Dodati potrditve pri drugih nepovratnih dejanjih.</li>
@@ -194,9 +200,9 @@
     <p class="en">Recognition Rather Than Recall</p>
     <div class="cols">
       <div class="card issues"><h3>Težave</h3><ul>
-        <li>Ikone v glavi nimajo vidnih oznak.</li>
-        <li>Na strani »Tiketi« ni jasno vidnega iskalnega polja.</li>
-        <li>Statusi, vrste težav in zgodovina zahtevka so sicer dobro vidni.</li>
+        <li>Ikone v glavi nimajo vidnih oznak. <a class="show" href="/orders" target="_blank" rel="noopener">Tiketi ↗</a></li>
+        <li>Na strani »Tiketi« ni jasno vidnega iskalnega polja. <a class="show" href="/orders" target="_blank" rel="noopener">Tiketi ↗</a></li>
+        <li>Statusi, vrste težav in zgodovina zahtevka so sicer dobro vidni. <a class="show" href="/orders/KRJ-1" target="_blank" rel="noopener">Naročilo #1140 ↗</a></li>
       </ul></div>
       <div class="card fix"><h3>Predlogi</h3><ul>
         <li>Dodati kratke besedilne oznake ikonam.</li>
@@ -212,9 +218,9 @@
     <p class="en">Flexibility and Efficiency of Use</p>
     <div class="cols">
       <div class="card issues"><h3>Težave</h3><ul>
-        <li>Novinci zaradi številnih funkcij potrebujejo predhodno poznavanje sistema.</li>
-        <li>Tipkovničnih bližnjic za pogosta dejanja je premalo.</li>
-        <li>Bližnjica N je slabo predstavljena.</li>
+        <li>Novinci zaradi številnih funkcij potrebujejo predhodno poznavanje sistema. <a class="show" href="/orders/KRJ-1" target="_blank" rel="noopener">Naročilo #1140 ↗</a></li>
+        <li>Tipkovničnih bližnjic za pogosta dejanja je premalo. <a class="show" href="/orders" target="_blank" rel="noopener">Tiketi ↗</a></li>
+        <li>Bližnjica N je slabo predstavljena. <a class="show" href="/orders" target="_blank" rel="noopener">Tiketi – zavihek Moja ↗</a></li>
       </ul></div>
       <div class="card fix"><h3>Predlogi</h3><ul>
         <li>Dodati kratke namige in razlage funkcij za začetnike.</li>
@@ -230,9 +236,9 @@
     <p class="en">Aesthetic and Minimalist Design</p>
     <div class="cols">
       <div class="card issues"><h3>Težave</h3><ul>
-        <li>Majhna pisava, premalo poudarkov in veliko informacij naenkrat.</li>
-        <li>V ShipG zalogi so imena artiklov skrajšana.</li>
-        <li>Pri ožjem oknu se pojavi vodoravni drsnik; kartice vračil zavzamejo preveč prostora.</li>
+        <li>Majhna pisava, premalo poudarkov in veliko informacij naenkrat. <a class="show" href="/orders/KRJ-1" target="_blank" rel="noopener">Naročilo #1140 ↗</a></li>
+        <li>V ShipG zalogi so imena artiklov skrajšana. <a class="show" href="/shipg?view=stock" target="_blank" rel="noopener">ShipG zaloga ↗</a></li>
+        <li>Pri ožjem oknu se pojavi vodoravni drsnik; kartice vračil zavzamejo preveč prostora. <a class="show" href="/shipg" target="_blank" rel="noopener">ShipG – Za preverit ↗</a></li>
       </ul></div>
       <div class="card fix"><h3>Predlogi</h3><ul>
         <li>Povečati berljivost in poudariti ključne podatke; manj pomembne skriti v razširljive dele.</li>
@@ -248,9 +254,9 @@
     <p class="en">Help Users Recognize, Diagnose, and Recover from Errors</p>
     <div class="cols">
       <div class="card issues"><h3>Težave</h3><ul>
-        <li>Napaka pri e-poštnem naslovu je prikazana v angleščini.</li>
-        <li>Stran 404 je v angleščini in brez poti nazaj.</li>
-        <li>Pri iskanju brez zadetkov je sporočilo zavajajoče.</li>
+        <li>Napaka pri e-poštnem naslovu je prikazana v angleščini. <a class="show" href="/orders" target="_blank" rel="noopener">Tiketi – nov ticket (tipka N) ↗</a></li>
+        <li>Stran 404 je v angleščini in brez poti nazaj. <a class="show" href="/orders/KRJ-999" target="_blank" rel="noopener">Neobstoječe naročilo ↗</a></li>
+        <li>Pri iskanju brez zadetkov je sporočilo zavajajoče. <a class="show" href="/shipg?view=check&amp;q=xyzqq" target="_blank" rel="noopener">Iskanje »xyzqq« ↗</a></li>
       </ul></div>
       <div class="card fix"><h3>Predlogi</h3><ul>
         <li>Opozorila o nepravilnem e-poštnem naslovu prevesti v slovenščino.</li>
@@ -266,8 +272,8 @@
     <p class="en">Help and Documentation</p>
     <div class="cols">
       <div class="card issues"><h3>Težave</h3><ul>
-        <li>Nekateri diagrami postopkov so preobsežni in težje razumljivi.</li>
-        <li>Pri uporabniških nivojih 1–5 in pravicah ni pojasnjeno, kaj omogočajo.</li>
+        <li>Nekateri diagrami postopkov so preobsežni in težje razumljivi. <a class="show" href="/process" target="_blank" rel="noopener">Postopek obravnave ↗</a></li>
+        <li>Pri uporabniških nivojih 1–5 in pravicah ni pojasnjeno, kaj omogočajo. <a class="show" href="/admin" target="_blank" rel="noopener">Nadzorna plošča ↗</a></li>
       </ul></div>
       <div class="card fix"><h3>Predlogi</h3><ul>
         <li>Obsežne diagrame razdeliti na manjše korake.</li>
