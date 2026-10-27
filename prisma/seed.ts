@@ -17,7 +17,7 @@ import { PrismaClient } from "@prisma/client";
 
 import { hashPassword } from "../src/lib/password";
 import { orderNumberKey } from "../src/lib/order-number";
-import { GUEST_USERNAME } from "../src/lib/guest";
+import { GUEST_USERNAME, VUI_USERNAME } from "../src/lib/guest";
 
 const db = new PrismaClient();
 
@@ -219,6 +219,19 @@ async function main() {
         passwordHash: await hashPassword(process.env.GUEST_PASSWORD?.trim() || "Gost-Kroj-2026"),
         level: 3,
         color: "#5e5ce6",
+        locale: "sl",
+      },
+    }),
+    db.user.create({
+      data: {
+        username: VUI_USERNAME,
+        name: "VUI (ogled)",
+        // Kot gost: ogled za predstavitev pri VUI, s preprostim geslom vui.
+        isAdmin: true,
+        permissions: "warehouse,products,languages,satisfaction",
+        passwordHash: await hashPassword("vui"),
+        level: 3,
+        color: "#ff9f0a",
         locale: "sl",
       },
     }),

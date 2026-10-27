@@ -4,8 +4,13 @@
  */
 export const GUEST_USERNAME = "gost";
 
+/** Račun za predstavitev pri predmetu VUI (vui / vui) — enake omejitve kot gost. */
+export const VUI_USERNAME = "vui";
+
+const GUEST_USERNAMES: ReadonlySet<string> = new Set([GUEST_USERNAME, VUI_USERNAME]);
+
 export function isGuest(user: { username: string }): boolean {
-  return user.username.toLowerCase() === GUEST_USERNAME;
+  return GUEST_USERNAMES.has(user.username.toLowerCase());
 }
 
 /**
