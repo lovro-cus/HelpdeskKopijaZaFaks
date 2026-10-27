@@ -21,10 +21,16 @@ const MACHINE = ["/api/cron", "/api/webhooks"];
  */
 const PORTAL = ["/portal"];
 
+/**
+ * Predstavitev hevristične evalvacije (predmet VUI): statična stran iz
+ * public/vui, brez podatkov iz aplikacije — dostopna brez prijave.
+ */
+const PRESENTATION = ["/vui"];
+
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  const passthrough = [...PUBLIC, ...MACHINE, ...PORTAL];
+  const passthrough = [...PUBLIC, ...MACHINE, ...PORTAL, ...PRESENTATION];
   if (passthrough.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
     return NextResponse.next();
   }

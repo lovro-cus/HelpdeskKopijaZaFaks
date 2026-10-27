@@ -41,6 +41,10 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+  async rewrites() {
+    // Predstavitev za VUI: /vui namesto /vui/index.html.
+    return [{ source: "/vui", destination: "/vui/index.html" }];
+  },
 };
 
 export default nextConfig;
