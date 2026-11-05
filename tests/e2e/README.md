@@ -11,6 +11,8 @@ bun run test:e2e
 
 Testi uporabljajo lokalno nameščeni Google Chrome, enega delavca in slovensko okolje brskalnika. Če Chrome ni nameščen, ga je treba namestiti ali zavestno spremeniti `channel` v `playwright.config.ts`. Prijavna stran je vedno angleška; po prijavi uporabnikov iz semena je vmesnik slovenski.
 
+Z `CI=true` (tako teče v GitHub Actions, `.github/workflows/e2e.yml`) se namesto razvojnega strežnika zgradi in zažene produkcijska različica, testi pa uporabijo Playwrightov Chromium (`bunx playwright install chromium`). Podrobnosti so v `docs/naloga4/izbira-orodja.md`.
+
 Pred zagonom ustavi druge strežnike `next dev` iz tega repozitorija: zagon uporablja isto mapo `.next`. Playwright sam zažene strežnik na `http://localhost:3100` in ga po koncu ustavi. Obstoječega strežnika na tem portu ne prevzame.
 
 ## Izolacija podatkov
