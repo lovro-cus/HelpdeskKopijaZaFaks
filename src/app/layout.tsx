@@ -73,6 +73,15 @@ const themeScript = `
 })();
 `;
 
+/** Microsoft Clarity — snemanje sej za VUI analizo uporabnosti. */
+const clarityScript = `
+(function(c,l,a,r,i,t,y){
+  c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+  t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+  y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+})(window, document, "clarity", "script", "z9f0wdyuvp");
+`;
+
 const CONTRACT = `
 THESIS: A returns desk built as the paper it replaced — sheets of work laid on a drafting table.
 It refuses the indigo-on-white Linear clone it grew out of, and refuses colour as a substitute for hierarchy.
@@ -102,6 +111,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: clarityScript }} />
       </head>
       <body>
         <div dangerouslySetInnerHTML={{ __html: `<!--${CONTRACT}-->` }} />

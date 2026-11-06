@@ -8,11 +8,11 @@ const csp = [
   "object-src 'none'",
   "frame-ancestors 'none'",
   "form-action 'self'",
-  "img-src 'self' data: blob:",
+  "img-src 'self' data: blob: https://*.clarity.ms https://c.bing.com",
   "font-src 'self' data:",
   "style-src 'self' 'unsafe-inline'",
-  `script-src 'self' 'unsafe-inline'${isProd ? "" : " 'unsafe-eval'"}`,
-  "connect-src 'self'",
+  `script-src 'self' 'unsafe-inline' https://*.clarity.ms${isProd ? "" : " 'unsafe-eval'"}`,
+  "connect-src 'self' https://*.clarity.ms https://c.bing.com",
   ...(isProd ? ["upgrade-insecure-requests"] : []),
 ].join("; ");
 
