@@ -244,7 +244,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
       </div>
 
       {/* Glava zapisa: številka naročila je naslov dokumenta, ne postavka v njem. */}
-      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5" data-testid="issue-header">
         <h2 className="mono text-[26px] font-semibold leading-none tracking-[-0.025em]">
           {issue.orderNumber}
         </h2>

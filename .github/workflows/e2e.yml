@@ -2,9 +2,7 @@ name: Testi
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    branches: [feature/naloga-2-funkcionalni-testi]
   workflow_dispatch:
 
 permissions:

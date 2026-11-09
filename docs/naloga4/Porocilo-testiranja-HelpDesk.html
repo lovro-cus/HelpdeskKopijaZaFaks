@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="sl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Poročilo avtomatiziranega testiranja HelpDesk</title>
+<style>
+@page { size: A4; margin: 18mm; }
+* { box-sizing: border-box; }
+body { max-width: 1040px; margin: 36px auto; padding: 0 24px; color: #17212b; background: white; font: 15px/1.55 "Segoe UI", Arial, sans-serif; }
+h1,h2,h3 { color: #000; line-height: 1.2; break-after: avoid; }
+h1 { font-size: 29px; margin: 0 0 8px; }
+h2 { font-size: 22px; margin: 36px 0 14px; padding-top: 6px; border-top: 1px solid #d9d9d9; }
+h3 { font-size: 18px; margin: 24px 0 10px; }
+p { margin: 10px 0; }
+ul,ol { margin: 8px 0 12px; padding-left: 24px; }
+li { margin: 3px 0; }
+table { border-collapse: collapse; width: 100%; margin: 14px 0 20px; font-size: 13px; overflow-wrap: anywhere; }
+th,td { border: 1px solid #d9d9d9; padding: 8px 10px; text-align: left; vertical-align: top; }
+th { background: #e8eef4; color: #000; font-weight: 600; }
+tr:nth-child(even) td { background: #f7f9fb; }
+thead { display: table-header-group; }
+tr { break-inside: avoid; }
+td.k { width: 22%; font-weight: 600; }
+pre { padding: 14px; border: 1px solid #d9d9d9; white-space: pre-wrap; overflow-wrap: anywhere; background: #f7f9fb; font-size: 13px; }
+code { font-family: Consolas, monospace; font-size: .92em; }
+.meta { color: #4a5563; margin: 0 0 24px; }
+.ok { color: #0b6b2f; font-weight: 600; }
+.fail { color: #a11d1d; font-weight: 600; }
+.note { border-left: 4px solid #c58a00; background: #fff8e6; padding: 10px 14px; margin: 14px 0; }
+.toc { columns: 2; font-size: 14px; }
+figure { margin: 14px 0 22px; break-inside: avoid; }
+figure img { width: 100%; border: 1px solid #d9d9d9; }
+figcaption { font-size: 13px; color: #4a5563; margin-top: 4px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 700px) { .grid { grid-template-columns: 1fr; } .toc { columns: 1; } body { padding: 0 16px; } }
+@media print { body { max-width: none; margin: 0; padding: 0; font-size: 10pt; } h1 { font-size: 22pt; } h2 { font-size: 15pt; } table { font-size: 8.5pt; } th,td { padding: 5px; } pre { font-size: 9pt; } a { color: inherit; text-decoration: none; } }
+</style></head><body><main>
+
+<h1>Poročilo avtomatiziranega funkcionalnega testiranja — HelpDesk</h1>
+<p class="meta">4. naloga · Avtomatizacija funkcionalnega testiranja · Datum izvedbe: 9. 11. 2026 · Orodje: Playwright Test 1.64.1 · Testirana koda: veja <code>feature/naloga-2-funkcionalni-testi</code> (osnova commit <code>0007417</code> s spremembami te naloge)</p>
+
+<p><strong>Vsebina:</strong></p>
+<ol class="toc">
+<li><a href="#povzetek">Povzetek</a></li>
+<li><a href="#orodje">Izbira orodja in utemeljitev</a></li>
+<li><a href="#cevovod">Vključitev v cevovod</a></li>
+<li><a href="#namestitev">Namestitev in nastavitev</a></li>
+<li><a href="#primeri">Avtomatizirani testni primeri</a></li>
+<li><a href="#pregled">Preverjanje testnih skript</a></li>
+<li><a href="#mutacije">Preverjanje z namernimi napakami</a></li>
+<li><a href="#rezultati">Rezultati izvedbe</a></li>
+<li><a href="#napake">Ugotovljene napake</a></li>
+<li><a href="#ui">Uporaba umetne inteligence</a></li>
+<li><a href="#omejitve">Omejitve</a></li>
+<li><a href="#priloge">Priloge</a></li>
+</ol>
+
+<h2 id="povzetek">1. Povzetek</h2>
+<p>Za avtomatizirano funkcionalno testiranje spletne aplikacije HelpDesk (Next.js 15, React 19, TypeScript, Prisma, SQLite) je izbrano orodje <strong>Playwright Test</strong>. Pet testnih primerov iz 2. naloge (TP-01 do TP-05, različica 3.0) je avtomatiziranih. Testne skripte je ustvaril agent UI, nato pa so bile preverjene po treh merilih iz navodil: zajetost korakov, predpogojev in podatkov; preverjanje pričakovanega rezultata; robustnost. Testi tečejo v cevovodu GitHub Actions ob vsakem pushu na vejo <code>feature/naloga-2-funkcionalni-testi</code>.</p>
+<table>
+<thead><tr><th>Zagon</th><th>Okolje</th><th>Rezultat</th></tr></thead>
+<tbody>
+<tr><td>Način cevovoda (<code>CI=true</code>), 9. 11. 2026</td><td>produkcijska gradnja, Chromium (headless)</td><td class="ok">5/5 uspešnih</td></tr>
+<tr><td>Ponovljivost: vsak test 2×, brez ponovitev ob neuspehu</td><td>enako</td><td class="ok">10/10 uspešnih</td></tr>
+<tr><td>Lokalni razvojni način</td><td><code>next dev</code>, Google Chrome</td><td>3/5; TP-02 in TP-03 padeta <em>samo</em> pri dodatnem preverjanju konzole zaradi znane napake NAP-01</td></tr>
+<tr><td>Preverjanje z namernimi napakami v aplikaciji</td><td>produkcijska gradnja</td><td class="ok">obe napaki zaznani na pričakovanem koraku</td></tr>
+</tbody></table>
+
+<h2 id="orodje">2. Izbira orodja in utemeljitev</h2>
+<table>
+<thead><tr><th>Orodje</th><th>Jezik testov</th><th>Vključitev v cevovod</th><th>Oblika rezultatov</th><th>Ocena</th></tr></thead>
+<tbody>
+<tr><td><strong>Playwright Test</strong></td><td>TypeScript / JavaScript</td><td>en ukaz <code>playwright test</code>; uradna predloga za GitHub Actions in Docker slika; sam zažene strežnik aplikacije (<code>webServer</code>)</td><td>izhodna koda, <code>list</code>, <code>html</code>, <code>json</code>, <code>junit</code>, <code>github</code>, posnetki, video, sledi</td><td><strong>izbrano</strong></td></tr>
+<tr><td>Cypress</td><td>TS / JS</td><td>GitHub Action; vzporedni zagon prek plačljivega Cypress Cloud</td><td>spec/mocha; JUnit in HTML z dodatki</td><td>primerno, več omejitev (en zavihek, en izvor)</td></tr>
+<tr><td>Selenium WebDriver</td><td>več jezikov</td><td>gonilniki in brskalniki ali Selenium Grid; testno ogrodje posebej</td><td>odvisno od ogrodja</td><td>preveč nastavljanja</td></tr>
+<tr><td>Puppeteer</td><td>JS</td><td>samo knjižnica za upravljanje brskalnika</td><td>brez lastnih poročil</td><td>ni testno ogrodje</td></tr>
+</tbody></table>
+<p><strong>Utemeljitev:</strong></p>
+<ul>
+<li><strong>Ujemanje z jezikom in ogrodjem.</strong> Testi so v TypeScriptu, kot aplikacija, in uvažajo njene nastavitve. Dokumentacija Next.js navaja Playwright kot priporočeno orodje za E2E teste.</li>
+<li><strong>Samostojna priprava okolja.</strong> Playwright sam zažene aplikacijo na vratih 3100 z ločeno bazo <code>naloga2-e2e.db</code>. Testi pred vsakim primerom bazo napolnijo s semenom, zato cevovod ne potrebuje zunanje baze, storitev ali skrivnosti.</li>
+<li><strong>Rezultati v oblikah za cevovod.</strong> Izhodna koda 0/1 ustavi cevovod; JUnit XML se prikaže kot tabela rezultatov v GitHubu; poročevalec <code>github</code> doda opombe ob vrsticah kode; HTML poročilo s posnetki in sledmi se shrani kot artefakt; JSON je strojno berljiv.</li>
+<li><strong>Brezplačno in odprtokodno</strong> (Apache 2.0); vzporednost in deljenje testov ne zahtevata plačljive storitve.</li>
+</ul>
+
+<h2 id="cevovod">3. Vključitev v cevovod</h2>
+<p>Cevovod je GitHub Actions (<code>.github/workflows/e2e.yml</code>), ker je repozitorij na GitHubu. Sproži se ob <code>push</code> na vejo <code>feature/naloga-2-funkcionalni-testi</code>, na kateri poteka delo za nalogo, ter ročno (<code>workflow_dispatch</code>). Na <code>main</code> se ne sproži.</p>
+<pre>push na feature/naloga-2-funkcionalni-testi
+ └─ posel »Tipi in enotski testi«
+      bun install → prisma generate → bun run typecheck → bun run test (281 enotskih testov)
+      └─ posel »Funkcionalni testi (Playwright)«   (samo če je prvi uspel)
+           bun install → prisma generate → playwright install --with-deps chromium
+           → bun run test:e2e   (CI=true: prisma db push → next build → next start → TP-01 … TP-05)
+           → vedno (tudi ob neuspehu):
+               artefakt playwright-report  (HTML poročilo s koraki in posnetki)
+               artefakt test-results       (posnetki, sledi, junit.xml, results.json)
+               preverjanje »Rezultati funkcionalnih testov« iz junit.xml</pre>
+<table>
+<thead><tr><th>Nastavitev</th><th>Lokalno</th><th>V cevovodu (<code>CI=true</code>)</th></tr></thead>
+<tbody>
+<tr><td>Strežnik aplikacije</td><td><code>next dev</code></td><td><code>prisma db push</code> + <code>next build</code> + <code>next start</code></td></tr>
+<tr><td>Brskalnik</td><td>nameščeni Google Chrome</td><td>Playwrightov Chromium</td></tr>
+<tr><td>Ponovitve ob neuspehu</td><td>0</td><td>1 (zazna nestabilne teste)</td></tr>
+<tr><td><code>test.only</code></td><td>dovoljen</td><td>prepovedan (<code>forbidOnly</code>)</td></tr>
+<tr><td>Poročila</td><td>list, html, json, junit</td><td>+ github (opombe in povzetek zagona)</td></tr>
+</tbody></table>
+
+<h2 id="namestitev">4. Namestitev in nastavitev</h2>
+<pre>bun install                          # @playwright/test 1.64.1 je v devDependencies
+bunx playwright install chromium     # brskalnik za način cevovoda (na Linuxu z --with-deps)
+
+bun run test:e2e                     # lokalno: next dev + Google Chrome
+$env:CI="true"; bun run test:e2e     # kot v cevovodu: produkcijska gradnja + Chromium
+bunx playwright show-report          # odpre HTML poročilo</pre>
+<p>Konfiguracija <code>playwright.config.ts</code> določa mapo testov <code>tests/e2e</code>, ločeno testno bazo in mapo prilog, slovensko okolje brskalnika (<code>sl-SI</code>), velikost okna 1440 × 1000, zaporedno izvajanje z enim delavcem (testi si delijo eno bazo), posnetek zaslona ob koncu vsakega testa, sled ob neuspehu in samodejni zagon strežnika.</p>
+
+<h2 id="primeri">5. Avtomatizirani testni primeri</h2>
+<p>Osnova so testni primeri iz <code>docs/naloga2/testni-primeri-v3.md</code> (različica 3.0). Vsak primer ima svojo skripto. Vsak korak testnega primera je v skripti en <code>test.step</code> z isto številko in opisom, zato so koraki vidni v poročilu in v cevovodu.</p>
+<table>
+<thead><tr><th>ID</th><th>Testni primer</th><th>Funkcionalnost</th><th>Vrsta</th><th>Skripta</th></tr></thead>
+<tbody>
+<tr><td>TP-01</td><td>Odpiranje novega ticketa</td><td>F-01</td><td>pozitiven</td><td><code>tests/e2e/tp-01-nov-ticket.spec.ts</code></td></tr>
+<tr><td>TP-02</td><td>Predaja ticketa drugemu nivoju</td><td>F-02</td><td>pozitiven</td><td><code>tests/e2e/tp-02-predaja-nivoju.spec.ts</code></td></tr>
+<tr><td>TP-03</td><td>Zavrnitev zaključka brez potrditve vračila</td><td>F-03</td><td>negativen</td><td><code>tests/e2e/tp-03-zakljucek-brez-potrditve.spec.ts</code></td></tr>
+<tr><td>TP-04</td><td>Odgovor stranki v demo nabiralniku</td><td>F-04</td><td>pozitiven</td><td><code>tests/e2e/tp-04-odgovor-stranki.spec.ts</code></td></tr>
+<tr><td>TP-05</td><td>Zavrnitev podvojenega uporabniškega imena</td><td>F-08</td><td>negativen</td><td><code>tests/e2e/tp-05-podvojeno-uporabnisko-ime.spec.ts</code></td></tr>
+<tr><td>—</td><td>Skupna priprava, prijava, lokatorji</td><td>—</td><td>—</td><td><code>tests/e2e/support/helpers.ts</code></td></tr>
+</tbody></table>
+
+<h2 id="pregled">6. Preverjanje testnih skript</h2>
+
+<h3>6.1 Pregled prve različice skripte</h3>
+<p>Prvo avtomatizacijo (<code>tests/e2e/functional.spec.ts</code>, ena datoteka za vseh pet primerov) je v 2. nalogi pripravil agent Codex. Pregled po merilih iz navodil je pokazal naslednje pomanjkljivosti. Zato je skripto nadomestila nova različica.</p>
+<table>
+<thead><tr><th>#</th><th>Ugotovitev</th><th>Merilo</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>V TP-03 je preverjanje Arhiva iskalo povezavo <code>a[href="/orders/KRJ-3"]</code>, Arhiv pa povezave izpiše kot <code>/orders/KRJ-n?view=archive</code>. Preverjanje je zato <strong>uspelo vedno</strong>, tudi če bi bil ticket arhiviran.</td><td>pričakovani rezultat</td></tr>
+<tr><td>2</td><td>Predpogoji niso bili preverjeni: naročilo 3001 ne obstaja (TP-01); KRJ-15 je na L1 pri Nini, Eva nima obvestil (TP-02); stanje KRJ-3 in artikel z rešitvijo Vračilo (TP-03); tri sporočila brez prevzemnika (TP-04); Nina na seznamu (TP-05).</td><td>predpogoji</td></tr>
+<tr><td>3</td><td>Vmesni pričakovani odzivi niso bili preverjeni: odprt obrazec, izbrana vrsta, vpisane vrednosti in privzeti prevzemnik (TP-01, koraki 1–3); obrazec predaje (TP-02, k. 2); besedilo potrditvenega polja (TP-03, k. 1); vrednosti obrazca (TP-05, k. 2).</td><td>koraki</td></tr>
+<tr><td>4</td><td>Status, nivo in lastnik so se preverjali kot »stran vsebuje besedilo« (<code>body</code> vsebuje »V delu«, »L3«, »Administrator«). To besedilo se pojavi tudi drugje (nit, meni), zato preverjanje ne dokazuje stanja ticketa.</td><td>pričakovani rezultat</td></tr>
+<tr><td>5</td><td>»Brez osebnega lastnika« (TP-02) se je preverjal samo s prisotnostjo besedila čakanja, ne pa z odsotnostjo imena lastnika.</td><td>pričakovani rezultat</td></tr>
+<tr><td>6</td><td>Končni rezultat TP-01 »obstaja <em>en</em> nov ticket za naročilo 3001« ni bil preverjen.</td><td>pričakovani rezultat</td></tr>
+<tr><td>7</td><td>TP-05: nivo obstoječe Nine, prazen e-mail in neoznačena izbira Administrator niso bili preverjeni.</td><td>testni podatki</td></tr>
+<tr><td>8</td><td>Lokatorja <code>.last()</code> za gumb »Predaj naprej« in polje gesla sta odvisna od vrstnega reda elementov.</td><td>robustnost</td></tr>
+</tbody></table>
+
+<h3>6.2 Pregled nove različice po testnih primerih</h3>
+<p>Oznake: ✔ izpolnjeno, ◐ izpolnjeno z utemeljenim odstopanjem.</p>
+
+<p><strong>TP-01 Odpiranje novega ticketa</strong></p>
+<table><tbody>
+<tr><td class="k">Predpogoji ✔</td><td>Sveže seme pred testom. Iskanje <code>?q=3001</code> (išče po vseh stanjih, tudi po Arhivu) vrne 0 zadetkov. Admin je prijavljen na strani Tiketi.</td></tr>
+<tr><td class="k">Testni podatki ✔</td><td>Vsi podatki iz primera so v objektu <code>data</code> na vrhu skripte: Kakovost, 3001, naslov, e-mail, ime, Visoka, opis, prevzemnik Administrator.</td></tr>
+<tr><td class="k">Koraki ✔</td><td>K1 dialog »Nov ticket«. K2 gumb Kakovost je izbran (<code>aria-pressed</code>), vrednosti vseh štirih polj. K3 prioriteta Visoka, prevzemnik Administrator, ime stranke. K4 URL oblike <code>KRJ-n</code>, naslov, ključ v glavi. K5 po osvežitvi številka naročila, vrsta, status V delu, nivo L3 in prioriteta <em>v glavi ticketa</em>; polja naročila, imena, e-maila, prioritete; prevzemnik <em>v okviru lastnika</em>; opis v niti natanko enkrat.</td></tr>
+<tr><td class="k">Pričakovani rezultat ✔</td><td>Iskanje <code>?q=3001</code> vrne natanko en zadetek, ki vodi na ustvarjeni ključ.</td></tr>
+<tr><td class="k">Robustnost ✔</td><td>Lokatorji po vlogi in imenu, omejeni na dialog oziroma glavo. Ključ ni vnaprej določen.</td></tr>
+</tbody></table>
+
+<p><strong>TP-02 Predaja ticketa drugemu nivoju</strong></p>
+<table><tbody>
+<tr><td class="k">Predpogoji ✔</td><td>Prva prijava Eve in Nine z zamenjavo gesla skozi vmesnik; Eva ima prazna obvestila (»Vse je pregledano«); izhodiščno stanje KRJ-15: 2125, V delu, L1, Nina Vidmar.</td></tr>
+<tr><td class="k">Testni podatki ✔</td><td>»2. nivo — obvesti vse«, točen komentar, novo geslo Eve.</td></tr>
+<tr><td class="k">Koraki ✔</td><td>K2 polje »Predaj komu«. K3 obrazec se zapre; L2, V delu; okvir lastnika kaže »2. nivo« in »čaka, da ga nekdo s tega nivoja prevzame« namesto imena; v niti natanko en dogodek »je predal« s komentarjem. K4 natanko eno obvestilo »#2125 · Nina Vidmar« s komentarjem. K5 obvestilo odpre KRJ-15; po osvežitvi L2 brez prevzemnika, komentar v niti.</td></tr>
+<tr><td class="k">Pričakovani rezultat ✔</td><td>Pokrit v korakih 3–5.</td></tr>
+<tr><td class="k">Robustnost ✔</td><td>Gumb za potrditev se išče znotraj obrazca z »Predaj komu« (namesto <code>.last()</code>).</td></tr>
+</tbody></table>
+
+<p><strong>TP-03 Zavrnitev zaključka brez potrditve vračila</strong></p>
+<table><tbody>
+<tr><td class="k">Predpogoji ✔</td><td>Eva prijavljena. KRJ-3: 1690, Refund, V delu, L2, Eva Kranjc; en artikel Kroj Rain Jacket, velikost M, rešitev Vračilo. Zapišeta se število dogodkov v niti in število ticketov v Arhivu.</td></tr>
+<tr><td class="k">Testni podatki ✔</td><td>»Refund 119 EUR izveden.«, potrditveno polje neoznačeno.</td></tr>
+<tr><td class="k">Koraki ◐</td><td>K1 potrditveno polje z natančnim besedilom iz primera in artiklom »Kroj Rain Jacket Yellow / M«. K2 besedilo vpisano, polje neoznačeno. K3 točno sporočilo napake, obrazec ostane odprt. K4 po osvežitvi V delu, gumb »Zaključi« je še na voljo, število dogodkov v niti nespremenjeno, vnesenega opisa ni v niti; v Arhivu enako število ticketov in ni naročila 1690.</td></tr>
+<tr><td class="k">Odstopanje</td><td>Primer pravi »preveri Arhiv z iskanjem naročila 1690«. Iskanje v aplikaciji (<code>?q=</code>) namenoma ne upošteva stanja (<code>src/lib/issue-filter.ts</code>: »iskanje gre tudi po arhivu«), zato bi vrnilo tudi odprti KRJ-3 in ne bi nič dokazalo. Skripta zato preveri seznam Arhiva neposredno. <strong>Predlog:</strong> korak 4 v naslednji različici primera spremeniti v »preveri seznam Arhiva«.</td></tr>
+<tr><td class="k">Robustnost ✔</td><td>Potrditveno polje po dostopnem imenu, velikost po atributu <code>title</code>.</td></tr>
+</tbody></table>
+
+<p><strong>TP-04 Odgovor stranki v demo nabiralniku</strong></p>
+<table><tbody>
+<tr><td class="k">Predpogoji ✔</td><td>Admin prijavljen. Pogovor Lara Vzorčni, »Vračilo — naročilo #2125«, lara.vzorcni@example.com, povezava »Odpri ticket« na KRJ-15, tri sporočila, prevzemnik »Nedodeljeno«.</td></tr>
+<tr><td class="k">Testni podatki ✔</td><td>Točno besedilo odgovora.</td></tr>
+<tr><td class="k">Koraki ✔</td><td>K1 pogled »Odprto« izbran izrecno, pogovor natanko enkrat. K2 skripta počaka, da se naloži osnutek, ga izbriše in preveri, da polje vsebuje samo testni odgovor. K3 točna potrditev; sporočil je 4, zadnje je odhodno (podpora@kroj.example) z odgovorom, ki je na strani natanko enkrat. K4 pogovor v »Čakamo«, odgovor ohranjen, prevzemnik Administrator. K5 po osvežitvi odgovor ostane; »Odpri ticket« vodi na KRJ-15 (2125), lastnica Nina Vidmar.</td></tr>
+<tr><td class="k">Pričakovani rezultat ✔</td><td>Pokrit v korakih 3–5.</td></tr>
+<tr><td class="k">Robustnost ✔</td><td>Čakanje na osnutek prepreči tekmo med nalaganjem osnutka in vnosom. Navigacija se preverja z <code>expect(page).toHaveURL()</code>, ker Next.js menja naslov brez polnega nalaganja strani.</td></tr>
+</tbody></table>
+
+<p><strong>TP-05 Zavrnitev podvojenega uporabniškega imena</strong></p>
+<table><tbody>
+<tr><td class="k">Predpogoji ✔</td><td>Admin prijavljen; »6 aktivnih · 6 skupaj«; vrstica @nina (Nina Vidmar, nivo 1).</td></tr>
+<tr><td class="k">Testni podatki ✔</td><td>Ime, uporabniško ime, Slovenščina, 1. nivo in geslo vpisani in preverjeni; e-mail prazen; Administrator neoznačen.</td></tr>
+<tr><td class="k">Koraki ✔</td><td>K1 zavihek »Uporabniki«. K2 dialog »Nov uporabnik« in vse vrednosti. K3 točno opozorilo, dialog ostane odprt. K4 dialog se zapre; po osvežitvi enak povzetek, natanko 6 polj »Ime«, med njimi ni »Nina Dvojnik«, »Nina Vidmar« natanko enkrat z istim nivojem.</td></tr>
+<tr><td class="k">Pričakovani rezultat ✔</td><td>Pokrit v korakih 3–4.</td></tr>
+<tr><td class="k">Robustnost ✔</td><td>Vrstica uporabnika se išče po oznaki »@nina ·«, ne po položaju na seznamu.</td></tr>
+</tbody></table>
+
+<h3>6.3 Robustnost (skupno za vse skripte)</h3>
+<ul>
+<li><strong>Izbira elementov:</strong> lokatorji po vlogi in dostopnem imenu (<code>getByRole</code>, <code>getByLabel</code>, <code>exact: true</code>), omejeni na vsebnik (dialog, obrazec, glava ticketa). Za dva dela strani brez dostopnega imena sta v aplikacijo dodana atributa <code>data-testid="issue-header"</code> (glava ticketa) in <code>data-testid="issue-owner"</code> (okvir lastnika). To je edina sprememba aplikacije in ne vpliva na prikaz.</li>
+<li><strong>Čakanje:</strong> nobena skripta ne uporablja fiksnih pavz (<code>waitForTimeout</code>). Vsa preverjanja s <code>expect</code> samodejno ponavljajo do 15 s.</li>
+<li><strong>Neodvisnost:</strong> shema baze se pripravi enkrat, seme pa pred <em>vsakim</em> testom (samodejni fixture <code>freshDatabase</code>). Vsak test ima nov kontekst brskalnika brez prijavne seje, kar nadomesti odjavo po primeru. Gesla se pripravijo v vsakem testu znova. Noben test ne potrebuje rezultata drugega; to potrjuje zagon z vsakim testom dvakrat zapored (10/10).</li>
+<li><strong>Napake brskalnika:</strong> fixture <code>browserErrors</code> zbere napake JavaScripta in <code>console.error</code> ter test podre, če obstajajo. To je dodatna zahteva, ki ni del testnih primerov.</li>
+</ul>
+
+<h2 id="mutacije">7. Preverjanje z namernimi napakami</h2>
+<p>Da bi preverili, ali skripte res preverjajo pričakovani rezultat in ne le nalaganja strani, sta bili v aplikacijo začasno vneseni dve napaki. Testi so tekli proti produkcijski gradnji, nato je bila koda povrnjena.</p>
+<table>
+<thead><tr><th>Namerna napaka</th><th>Mesto v kodi</th><th>Pričakovano</th><th>Rezultat</th></tr></thead>
+<tbody>
+<tr><td>Varovalka izklopljena: zaključek brez potrditve vračila uspe</td><td><code>src/lib/actions/issues.ts</code>, pogoj <code>returnConfirmed</code></td><td>TP-03 pade</td><td class="ok">TP-03 pade v koraku 3: sporočila »Potrdi, da je vračilo prispelo …« ni</td></tr>
+<tr><td>Predaja nivoju ohrani osebnega lastnika</td><td><code>src/lib/actions/issues.ts</code>, <code>assigneeId: null</code> → <code>me.id</code></td><td>TP-02 pade</td><td class="ok">TP-02 pade v koraku 3: pričakovano »2. nivo«, prejeto »Nina Vidmarjaz«</td></tr>
+</tbody></table>
+<p>Skripta iz 2. naloge druge napake v koraku 3 ne bi zaznala, ker je preverjala samo prisotnost besedila čakanja.</p>
+
+<h2 id="rezultati">8. Rezultati izvedbe</h2>
+<p>Zagon v načinu cevovoda 9. 11. 2026 ob 11:24 (Windows 11, Playwright 1.64.1, Chromium headless shell 156, produkcijska gradnja, prikaz 1440 × 1000, <code>sl-SI</code>). Skupno trajanje 1 min 43 s, od tega večina gradnja aplikacije. JUnit: <code>tests="5" failures="0"</code>. V nobenem testu ni bilo napak JavaScripta ali konzole.</p>
+<table>
+<thead><tr><th>ID</th><th>Status</th><th>Trajanje</th><th>Dejanski rezultat</th><th>Dokazila</th></tr></thead>
+<tbody>
+<tr><td>TP-01</td><td class="ok">Uspešen</td><td>5,0 s</td><td>Ticket za naročilo 3001 je ustvarjen (v tem zagonu KRJ-2184); po osvežitvi so vrsta Kakovost, prioriteta Visoka, status V delu, L3, prevzemnik Administrator, podatki stranke in opis v niti ohranjeni; za 3001 obstaja natanko en ticket.</td><td><a href="dokazila/TP-01.png">posnetek</a></td></tr>
+<tr><td>TP-02</td><td class="ok">Uspešen</td><td>8,8 s</td><td>KRJ-15 preide na L2 brez osebnega prevzemnika, v niti je dogodek predaje s komentarjem; Eva prejme eno obvestilo in prek njega odpre KRJ-15.</td><td><a href="dokazila/TP-02.png">posnetek</a></td></tr>
+<tr><td>TP-03</td><td class="ok">Uspešen</td><td>4,8 s</td><td>Zaključek brez potrditve je zavrnjen s točnim sporočilom; KRJ-3 ostane V delu, nit je nespremenjena, Arhiv ostane pri 10 ticketih brez 1690.</td><td><a href="dokazila/TP-03-zavrnitev-zakljucka.png">zavrnitev</a>, <a href="dokazila/TP-03.png">Arhiv</a></td></tr>
+<tr><td>TP-04</td><td class="ok">Uspešen</td><td>4,3 s</td><td>Odgovor je poslan in shranjen natanko enkrat kot četrto, odhodno sporočilo; pogovor je v »Čakamo« pri Administratorju; povezava vodi na KRJ-15, lastnica ostane Nina Vidmar.</td><td><a href="dokazila/TP-04.png">posnetek</a></td></tr>
+<tr><td>TP-05</td><td class="ok">Uspešen</td><td>3,9 s</td><td>Podvojeno ime nina je zavrnjeno s točnim opozorilom; po osvežitvi je še vedno 6 uporabnikov, Nine Dvojnik ni, Nina Vidmar je nespremenjena.</td><td><a href="dokazila/TP-05-podvojeno-uporabnisko-ime.png">zavrnitev</a>, <a href="dokazila/TP-05.png">seznam</a></td></tr>
+</tbody></table>
+
+<div class="grid">
+<figure><img src="dokazila/TP-01.png" alt="TP-01: iskanje 3001 z enim zadetkom"><figcaption>TP-01 — iskanje »3001« vrne natanko en ticket (KRJ-2184, Kakovost, L3, Nova Stranka)</figcaption></figure>
+<figure><img src="dokazila/TP-02.png" alt="TP-02: KRJ-15 na L2 po predaji"><figcaption>TP-02 — KRJ-15 na L2, čaka na prevzem, odprt prek obvestila</figcaption></figure>
+<figure><img src="dokazila/TP-03-zavrnitev-zakljucka.png" alt="TP-03: zavrnitev zaključka"><figcaption>TP-03 — obrazec zaključka z opozorilom o potrditvi vračila</figcaption></figure>
+<figure><img src="dokazila/TP-03.png" alt="TP-03: Arhiv brez 1690"><figcaption>TP-03 — Arhiv z 10 ticketi, brez naročila 1690</figcaption></figure>
+<figure><img src="dokazila/TP-04.png" alt="TP-04: KRJ-15 odprt iz pogovora"><figcaption>TP-04 — povezani ticket KRJ-15, lastnica Nina Vidmar</figcaption></figure>
+<figure><img src="dokazila/TP-05-podvojeno-uporabnisko-ime.png" alt="TP-05: zavrnitev podvojenega imena"><figcaption>TP-05 — opozorilo »To uporabniško ime je že zasedeno.«</figcaption></figure>
+</div>
+
+<h2 id="napake">9. Ugotovljene napake</h2>
+<table>
+<thead><tr><th>ID</th><th>Opis</th><th>Vpliv na teste</th><th>Prioriteta</th><th>Stanje</th></tr></thead>
+<tbody>
+<tr><td>NAP-01</td><td>React pri seznamu ticketov (Nina, Eva) izpiše »Each child in a list should have a unique "key" prop«; izvor <code>BulkOrderGrid</code>, otrok iz <code>OrdersPage</code>. Ugotovljena že v 2. nalogi.</td><td>V razvojnem načinu TP-02 in TP-03 padeta pri dodatnem preverjanju konzole, vsi funkcionalni koraki so uspešni. Produkcijska gradnja (cevovod) opozorila ne izpiše.</td><td>nizka</td><td>odprta</td></tr>
+</tbody></table>
+<p>Pri pregledu je bila ugotovljena še neskladnost testnega primera z aplikacijo (TP-03, korak 4 — iskanje ne upošteva stanja, glej poglavje 6.2). To ni napaka aplikacije, ampak predlog za popravek testnega primera.</p>
+
+<h2 id="ui">10. Uporaba umetne inteligence</h2>
+<ul>
+<li><strong>Agent:</strong> Claude Code (Anthropic), model Claude Opus 5.5.</li>
+<li><strong>Uporaba:</strong> izbira in utemeljitev orodja, nastavitev Playwrighta in cevovoda, pisanje testnih skript, raziskovanje vmesnika (drevo dostopnosti strani na vsakem koraku), preverjanje z namernimi napakami, priprava tega poročila.</li>
+<li><strong>Preverjanje dela agenta:</strong> skripte so bile pregledane korak za korakom proti testnim primerom po treh merilih iz navodil (poglavje 6). Da skripte zaznajo napačno delovanje, je potrjeno z namernimi napakami (poglavje 7), neodvisnost in stabilnost pa z dvakratnim zagonom brez ponovitev. Ob vsaki spremembi sta bila pognana tudi <code>bun run typecheck</code> in 281 enotskih testov.</li>
+</ul>
+
+<h2 id="omejitve">11. Omejitve</h2>
+<ul>
+<li>Testiran je samo namizni Chromium oziroma Chrome; mobilni prikaz, Firefox in WebKit niso vključeni.</li>
+<li>Pregled testnih primerov iz 3. naloge ni shranjen v repozitoriju; osnova je različica 3.0 iz 2. naloge.</li>
+<li>Pošiljanje zunanje e-pošte in finančne transakcije v lokalni kopiji niso mogoči; TP-04 preverja demo nabiralnik.</li>
+<li>Rezultati v tem poročilu so iz lokalnega zagona v načinu cevovoda; zagon na GitHub Actions se izvede ob pushu na vejo <code>feature/naloga-2-funkcionalni-testi</code>.</li>
+</ul>
+
+<h2 id="priloge">12. Priloge</h2>
+<table>
+<thead><tr><th>Datoteka</th><th>Vsebina</th></tr></thead>
+<tbody>
+<tr><td><code>docs/naloga4/izbira-orodja.md</code></td><td>Izbira orodja, cevovod in navodilo za nastavitev (podrobneje)</td></tr>
+<tr><td><code>docs/naloga4/avtomatizacija-testnih-primerov.md</code></td><td>Pregled skript po testnih primerih (Markdown različica poglavij 6–7)</td></tr>
+<tr><td><code>docs/naloga4/dokazila/</code></td><td>Posnetki zaslona, <code>junit.xml</code>, <code>results.json</code> zadnjega zagona</td></tr>
+<tr><td><code>tests/e2e/</code></td><td>Testne skripte in <code>README.md</code> za zagon</td></tr>
+<tr><td><code>playwright.config.ts</code></td><td>Konfiguracija Playwrighta</td></tr>
+<tr><td><code>.github/workflows/e2e.yml</code></td><td>Cevovod GitHub Actions</td></tr>
+<tr><td><code>docs/naloga2/testni-primeri-v3.md</code></td><td>Testni primeri TP-01 do TP-05</td></tr>
+</tbody></table>
+
+</main></body></html>

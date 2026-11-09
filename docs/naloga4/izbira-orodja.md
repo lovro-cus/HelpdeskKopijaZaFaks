@@ -27,15 +27,15 @@ HelpDesk je spletna aplikacija v TypeScriptu na ogrodju Next.js 15 (App Router, 
    - `github` — opombe ob vrsticah kode in povzetek zagona,
    - `html` — interaktivno poročilo s posnetki in sledmi (artefakt),
    - `json` — strojno berljivi rezultati.
-4. **Ponovna uporaba.** Testni primeri TP-01 do TP-05 iz naloge 2 so že avtomatizirani v `tests/e2e/functional.spec.ts`.
+4. **Ponovna uporaba.** Testni primeri TP-01 do TP-05 iz naloge 2 so bili že delno avtomatizirani; v tej nalogi so skripte prenovljene (`tests/e2e/tp-0*.spec.ts`, glej `avtomatizacija-testnih-primerov.md`).
 5. **Brezplačno.** Vzporednost in deljenje testov (`--shard`) ne zahtevata plačljive storitve.
 
 ## Vključitev v cevovod
 
-Cevovod je GitHub Actions, datoteka `.github/workflows/e2e.yml`. Sproži se ob `push` in `pull_request` na `main` ter ročno (`workflow_dispatch`).
+Cevovod je GitHub Actions, datoteka `.github/workflows/e2e.yml`. Sproži se ob `push` na vejo `feature/naloga-2-funkcionalni-testi` ter ročno (`workflow_dispatch`); na `main` se ne sproži.
 
 ```
-push / PR na main
+push na feature/naloga-2-funkcionalni-testi
   └─ posel "Tipi in enotski testi"   bun install → prisma generate → typecheck → bun run test
        └─ posel "Funkcionalni testi"  (samo če je prvi uspel)
             bun install → prisma generate → playwright install chromium

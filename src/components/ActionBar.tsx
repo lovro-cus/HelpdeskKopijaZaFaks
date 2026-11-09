@@ -60,7 +60,7 @@ export function ActionBar({
 
   return (
     <div className="card overflow-hidden">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3.5">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3.5" data-testid="issue-owner">
         <div className="flex items-center gap-2.5">
           <Avatar name={issue.assignee?.name} color={issue.assignee?.color} size={32} />
           <div className="leading-tight">

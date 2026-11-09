@@ -1,0 +1,47 @@
+<testsuites id="" name="" tests="5" failures="0" skipped="0" errors="0" time="103.24547199999999">
+<testsuite name="tp-01-nov-ticket.spec.ts" timestamp="2026-11-09T10:25:25.067Z" hostname="" tests="1" failures="0" skipped="0" time="5.009" errors="0">
+<testcase name="TP-01 odpiranje novega ticketa" classname="tp-01-nov-ticket.spec.ts" time="5.009">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|tp-01-nov-ticket-TP-01-odpiranje-novega-ticketa\test-finished-1.png]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="tp-02-predaja-nivoju.spec.ts" timestamp="2026-11-09T10:25:25.067Z" hostname="" tests="1" failures="0" skipped="0" time="8.78" errors="0">
+<testcase name="TP-02 predaja drugemu nivoju in obvestilo" classname="tp-02-predaja-nivoju.spec.ts" time="8.78">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|tp-02-predaja-nivoju-TP-02-9e191-drugemu-nivoju-in-obvestilo\test-finished-1.png]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="tp-03-zakljucek-brez-potrditve.spec.ts" timestamp="2026-11-09T10:25:25.067Z" hostname="" tests="1" failures="0" skipped="0" time="4.787" errors="0">
+<testcase name="TP-03 zavrnitev zaključka brez potrditve vračila" classname="tp-03-zakljucek-brez-potrditve.spec.ts" time="4.787">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|tp-03-zakljucek-brez-potrd-58f78-učka-brez-potrditve-vračila\test-finished-1.png]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="tp-04-odgovor-stranki.spec.ts" timestamp="2026-11-09T10:25:25.067Z" hostname="" tests="1" failures="0" skipped="0" time="4.259" errors="0">
+<testcase name="TP-04 odgovor stranki in stanje Čakamo" classname="tp-04-odgovor-stranki.spec.ts" time="4.259">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|tp-04-odgovor-stranki-TP-04-odgovor-stranki-in-stanje-Čakamo\test-finished-1.png]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="tp-05-podvojeno-uporabnisko-ime.spec.ts" timestamp="2026-11-09T10:25:25.067Z" hostname="" tests="1" failures="0" skipped="0" time="3.91" errors="0">
+<testcase name="TP-05 zavrnitev podvojenega uporabniškega imena" classname="tp-05-podvojeno-uporabnisko-ime.spec.ts" time="3.91">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|tp-05-podvojeno-uporabnisk-e886b-ojenega-uporabniškega-imena\test-finished-1.png]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>
