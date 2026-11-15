@@ -1,0 +1,310 @@
+<title>Razredi in meje</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Postavitev: merilni trak. Vsak prizor je en »meritveni list«, na sredini os s
+   pregradami (razredi) in zatiči (mejne vrednosti). */
+:root{
+  --paper:#eef2f5; --sheet:#ffffff; --ink:#14233a; --ink-2:#4c5c72; --rule:#c9d3de;
+  --ok:#11806a; --ok-bg:#d9f1ea; --bad:#b4372b; --bad-bg:#f8e0dc; --pin:#c77800; --pin-bg:#fdeccc;
+  --accent:#1f5fbf;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#0f1722; --sheet:#16212f; --ink:#e6edf5; --ink-2:#9fb0c4; --rule:#2c3b4f;
+  --ok:#3fc7a6; --ok-bg:#123a33; --bad:#ff7a6b; --bad-bg:#40201d; --pin:#ffb547; --pin-bg:#3c2c10;
+  --accent:#7fb0ff; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --paper:#0f1722; --sheet:#16212f; --ink:#e6edf5; --ink-2:#9fb0c4; --rule:#2c3b4f;
+  --ok:#3fc7a6; --ok-bg:#123a33; --bad:#ff7a6b; --bad-bg:#40201d; --pin:#ffb547; --pin-bg:#3c2c10;
+  --accent:#7fb0ff; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
+.wrap{max-width:980px;margin:0 auto;display:grid;gap:22px}
+header{display:grid;gap:6px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(28px,5vw,46px);line-height:1.05;margin:0;text-wrap:balance}
+.lede{color:var(--ink-2);max-width:65ch;margin:0}
+
+.sheet{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:22px clamp(16px,3vw,32px) 26px;display:grid;gap:18px;min-width:0}
+.nav{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.steps{display:flex;flex-wrap:wrap;gap:6px}
+.steps button{font-family:var(--f-mono);font-size:12px;border:1px solid var(--rule);background:transparent;color:var(--ink-2);
+  padding:6px 10px;border-radius:999px;cursor:pointer}
+.steps button[aria-current="step"]{background:var(--ink);color:var(--sheet);border-color:var(--ink)}
+.ctrl{display:flex;gap:8px}
+.ctrl button{font-family:var(--f-body);font-weight:600;font-size:14px;border:1px solid var(--ink);background:var(--ink);color:var(--sheet);
+  padding:8px 16px;border-radius:8px;cursor:pointer}
+.ctrl button.ghost{background:transparent;color:var(--ink)}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.scene{display:grid;gap:14px;min-width:0}
+.scene h2{font-family:var(--f-display);font-weight:700;font-size:clamp(22px,3.4vw,30px);margin:0;line-height:1.15;text-wrap:balance}
+.scene p{margin:0;max-width:68ch}
+.say{border-left:3px solid var(--accent);padding:6px 0 6px 14px;font-weight:500;max-width:68ch}
+.say b{font-family:var(--f-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:2px}
+
+.axis{overflow-x:auto;min-width:0}
+.axis svg{display:block;width:100%;min-width:620px;height:auto}
+.axis text{font-family:var(--f-mono);fill:var(--ink)}
+.axis .muted{fill:var(--ink-2)}
+.seg{transition:opacity .5s ease, transform .5s ease}
+.pin{transition:opacity .45s ease, transform .45s cubic-bezier(.2,.9,.3,1.3)}
+.hide{opacity:0;transform:translateY(-12px)}
+
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:14px;border-radius:3px;display:inline-block}
+
+table{border-collapse:collapse;width:100%;font-size:14px}
+.tbl{overflow-x:auto;min-width:0}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:500}
+td.v{font-family:var(--f-mono);white-space:nowrap}
+.tag{font-family:var(--f-mono);font-size:12px;padding:2px 8px;border-radius:999px;white-space:nowrap;display:inline-block}
+.ok{background:var(--ok-bg);color:var(--ok)} .bad{background:var(--bad-bg);color:var(--bad)} .warn{background:var(--pin-bg);color:var(--pin)}
+tr.row{transition:opacity .35s ease}
+tr.row.hide{opacity:0;transform:none}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.card{border:1px solid var(--rule);border-radius:8px;padding:12px 14px;display:grid;gap:4px;align-content:start}
+.card h3{margin:0;font-family:var(--f-display);font-size:17px}
+.card p{font-size:14px;color:var(--ink-2)}
+.qa{display:grid;gap:10px}
+.qa details{border:1px solid var(--rule);border-radius:8px;padding:10px 14px}
+.qa summary{cursor:pointer;font-weight:600}
+.qa details p{margin-top:6px;color:var(--ink-2)}
+.big{font-family:var(--f-mono);font-size:clamp(34px,7vw,64px);font-weight:600;letter-spacing:-.02em;line-height:1}
+.inf{display:flex;flex-wrap:wrap;gap:6px;font-family:var(--f-mono);font-size:13px}
+.inf span{border:1px dashed var(--rule);border-radius:4px;padding:3px 7px;color:var(--ink-2)}
+footer{font-size:13px;color:var(--ink-2)}
+kbd{font-family:var(--f-mono);font-size:12px;border:1px solid var(--rule);border-radius:4px;padding:1px 5px}
+@media (prefers-reduced-motion: reduce){ .seg,.pin,tr.row{transition:none} }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Zanesljivost in testiranje IS · 5. naloga · HelpDesk</div>
+    <h1>Ekvivalenčni razredi in mejne vrednosti</h1>
+    <p class="lede">Sedem prizorov za zagovor. Vsak se odvije sam, s tipkama <kbd>←</kbd> <kbd>→</kbd> greš naprej in nazaj. Primeri so iz vajine aplikacije in so bili 15. 11. dejansko preizkušeni.</p>
+  </header>
+
+  <section class="sheet" aria-live="polite">
+    <div class="nav">
+      <div class="steps" id="steps" role="tablist" aria-label="Prizori"></div>
+      <div class="ctrl">
+        <button class="ghost" id="prev" type="button">Nazaj</button>
+        <button id="next" type="button">Naprej</button>
+      </div>
+    </div>
+    <div id="stage"></div>
+  </section>
+
+  <footer>Vir: <span style="font-family:var(--f-mono)">docs/Naloga5-FormalniPristopi.md</span> v repozitoriju HelpdeskKopijaZaFaks.</footer>
+</div>
+
+<script>
+const S = [
+ { tab:"1 Problem", render: () => `
+  <div class="scene">
+    <h2>Vseh vnosov ne moreš preizkusiti</h2>
+    <p>Polje »kos« sprejme karkoli: 1, 2, 3 … 9999, 0, −1, 10000, 2,5, »abc«, prazno. Možnih vnosov je praktično neskončno, čas za testiranje pa ni.</p>
+    <div class="inf" id="inf"></div>
+    <p>Potrebujemo pravilo, kako izbrati <b>malo</b> vnosov, ki odkrijejo <b>čim več</b> napak. Črna skrinjica pomeni, da vnose izbiramo iz specifikacije (kaj mora sistem narediti), ne iz kode.</p>
+    <div class="say"><b>Na zagovoru reci</b>Oba pristopa sta tehniki črne skrinjice. Z njima iz neskončno možnih vnosov sistematično izberemo majhen, a pomenljiv nabor.</div>
+  </div>`, play: () => {
+    const vals=["1","2","3","…","42","…","9998","9999","0","−1","−50","10000","99999","2,5","abc","","1e3","  7","٣"];
+    const box=document.getElementById("inf"); vals.forEach((v,i)=>{const s=document.createElement("span");s.textContent=v===""?"(prazno)":v;s.className="seg hide";box.appendChild(s);later(()=>s.classList.remove("hide"),i*70);});
+ }},
+
+ { tab:"2 Razredi", render: () => `
+  <div class="scene">
+    <h2>Ekvivalenčni razredi: razdeli in izberi predstavnika</h2>
+    <p>Vnose razdelimo v skupine, v katerih se mora sistem obnašati <b>enako</b>. Če en predstavnik razreda deluje, predpostavimo, da delujejo vsi. Zato iz vsakega razreda testiramo <b>enega</b>.</p>
+    ${axisKos({pins:false})}
+    ${legend()}
+    <div class="say"><b>Na zagovoru reci</b>Za kos so trije razredi po številu: pod 1 neveljavno, od 1 do 9999 veljavno, nad 9999 neveljavno. Iz vsakega vzamemo en predstavnik, na primer −1, 1 in 10000.</div>
+  </div>`, play: () => revealSegs() },
+
+ { tab:"3 Meje", render: () => `
+  <div class="scene">
+    <h2>Mejne vrednosti: napake se skrivajo na robu</h2>
+    <p>Programer pogosto napiše <span style="font-family:var(--f-mono)">&lt;</span> namesto <span style="font-family:var(--f-mono)">&lt;=</span> ali zgreši dolžino za ena. Zato na vsaki meji testiramo <b>tik pod mejo, na meji in tik nad mejo</b>.</p>
+    ${axisKos({pins:true})}
+    ${legend(true)}
+    <div class="say"><b>Na zagovoru reci</b>Razredi povedo, kateri vnosi so enakovredni. Meje povedo, kje je največ možnosti za napako. Pristopa se dopolnjujeta, zato uporabimo oba.</div>
+  </div>`, play: () => { revealSegs(); revealPins(900); } },
+
+ { tab:"4 TP-01 kos", render: () => `
+  <div class="scene">
+    <h2>TP-01 · Količina artikla: aplikacija vnos tiho popravi</h2>
+    <p>Specifikacija (dopolnjena): kos je celo število od 1 do 9999, drugo se zavrne s sporočilom. Rezultat izvedbe:</p>
+    ${resultTable([
+      ["0","pod mejo","zavrne","shrani 1","bad"],
+      ["1","na meji","sprejme 1","sprejme 1","ok"],
+      ["9999","na meji","sprejme 9999","sprejme 9999","ok"],
+      ["10000","nad mejo","zavrne","shrani 1000","bad"],
+      ["−1","razred < 1","zavrne","shrani 1","bad"],
+      ["znesek −0,01","pod mejo","zavrne","znesek izbrisan","bad"],
+      ["št. naročila ABC-77","črke","zavrne","sprejme","bad"],
+    ])}
+    <div class="say"><b>Na zagovoru reci</b>Prvotni TP-01 je imel en sam vnos in je uspel. Šele mejne vrednosti so pokazale, da aplikacija napačne vnose tiho spremeni: 0 v 1, 10000 v 1000. Mejna vrednost 10000 je našla napako, ki je predstavnik razreda ne bi.</div>
+  </div>`, play: () => revealRows() },
+
+ { tab:"5 TP-05 geslo", render: () => `
+  <div class="scene">
+    <h2>TP-05 · Geslo in uporabniško ime</h2>
+    <p>Pri besedilu ni meja vrednosti, so pa meje <b>dolžine</b> in razredi <b>vrste znakov</b>. Geslo: 8–200 znakov, velika in mala črka, številka, poseben znak. Ime: 3–32 znakov iz <span style="font-family:var(--f-mono)">A–Z a–z 0–9 . _ -</span>.</p>
+    ${axisLen()}
+    ${resultTable([
+      ["Abcde1! (7)","pod mejo","zavrne","gumb onemogočen","ok"],
+      ["Abcdef1! (8)","na meji","sprejme","sprejme","ok"],
+      ["abcdef1!","brez velike","zavrne","zavrne","ok"],
+      ["201 znak","nad mejo","zavrne","»Geslo je predolgo.«","ok"],
+      ["ime ab (2)","pod mejo","zavrne z razlogom","splošno sporočilo","warn"],
+      ["ime Nina","obstaja nina","zavrne","sprejme","bad"],
+    ])}
+    <div class="say"><b>Na zagovoru reci</b>Vsak manjkajoč pogoj gesla je svoj neveljaven razred, zato je razredov šest. Pravila gesla delujejo na vseh mejah. Razred »isto ime z drugačnimi velikimi črkami« pa je našel napako: Nina in nina sta lahko dva računa.</div>
+  </div>`, play: () => { revealSegs(); revealPins(700); revealRows(1400); } },
+
+ { tab:"6 TP-06 prag", render: () => `
+  <div class="scene">
+    <h2>TP-06 · Prag nizke ocene: tako je prav</h2>
+    <p>Ocene so 1–10 (dokumentacija §7). Prag »V pregled pod« je celo število 2–10. Neveljavne vnose sem preizkusil dvakrat: v brskalniku in mimo njega, da se vidi, ali jih zavrne tudi strežnik.</p>
+    ${axisPrag()}
+    ${resultTable([
+      ["1","pod mejo","zavrne","brskalnik + strežnik zavrneta","ok"],
+      ["2","na meji","shrani","shrani","ok"],
+      ["10","na meji","shrani","shrani","ok"],
+      ["11","nad mejo","zavrne","»Vpiši celo število od 2 do 10.«","ok"],
+      ["5.5","decimalno","zavrne","zavrne","ok"],
+      ["abc / prazno","ni število","zavrne","zavrne","ok"],
+    ])}
+    <div class="say"><b>Na zagovoru reci</b>Prag je kontrolni primer, kjer vse deluje. Meje so enake v brskalniku in na strežniku, sporočilo pove pravilo. Tako bi morala delovati tudi polja iz TP-01.</div>
+  </div>`, play: () => { revealSegs(); revealPins(700); revealRows(1300); } },
+
+ { tab:"7 Povzetek", render: () => `
+  <div class="scene">
+    <h2>Kaj si zapomniti</h2>
+    <div class="cards">
+      <div class="card"><div class="big">3</div><h3>testni primeri</h3><p>TP-01 ticket (številka, kos, znesek), TP-05 uporabnik (ime, geslo), TP-06 prag (nov).</p></div>
+      <div class="card"><div class="big">42</div><h3>izvedenih vnosov</h3><p>27 uspešnih, 4 delno, 11 neuspešnih. Večina napak je v TP-01.</p></div>
+      <div class="card"><div class="big">×3</div><h3>dopolnjene specifikacije</h3><p>Dokumentacija pravil za vnose ni imela. Brez pravila ni mogoče reči, kaj je pravilno.</p></div>
+    </div>
+    <div class="qa">
+      <details open><summary>Kaj je ekvivalenčni razred?</summary><p>Skupina vnosov, za katere se mora sistem obnašati enako. Iz vsake testiramo en predstavnik, ker bi drugi dali enak izid.</p></details>
+      <details><summary>Zakaj še mejne vrednosti, če že imamo razrede?</summary><p>Ker so napake najpogostejše na robu razreda (&lt; namesto &lt;=). Pri kos sta 9999 in 10000 v različnih razredih, a 10000 je pokazal napako (shrani 1000).</p></details>
+      <details><summary>Kako izbereš vrednosti na meji?</summary><p>Za vsako mejo tri: tik pod, na meji, tik nad. Pri celih številih je korak 1, pri zneskih 0,01, pri besedilu en znak.</p></details>
+      <details><summary>Kaj narediš, ko specifikacije ni?</summary><p>Pravilo smiselno dopolniš in ga zapišeš pod testni primer, kot zahtevajo navodila. V dokumentu je tako pravilo označeno z [dopolnjeno].</p></details>
+      <details><summary>Zakaj si neveljavne vnose preizkusil mimo brskalnika?</summary><p>Ker preverjanje v brskalniku lahko kdorkoli obide. Šele zavrnitev na strežniku dokaže, da se napačen podatek ne shrani.</p></details>
+      <details><summary>Je to bela ali črna skrinjica?</summary><p>Črna. Razrede in meje izpeljemo iz zahtev, ne iz kode. Rezultat preverjamo skozi vmesnik.</p></details>
+    </div>
+  </div>`, play: () => {} },
+];
+
+/* ---------- risanje osi ---------- */
+const W=900, PADX=40;
+function axisKos({pins}){
+  // shematska os: odseki niso v merilu, prelomi so označeni
+  const y=70, x0=PADX, x1=W-PADX;
+  const segs=[
+    {a:x0, b:250, cls:"bad", lab:"neveljavno · < 1", rep:"−1"},
+    {a:250, b:650, cls:"ok", lab:"veljavno · 1 … 9999", rep:"1"},
+    {a:650, b:x1, cls:"bad", lab:"neveljavno · > 9999", rep:"10000"},
+  ];
+  const pinset=pins?[
+    {x:220,v:"0",note:"pod"},{x:280,v:"1",note:"na meji"},
+    {x:620,v:"9999",note:"na meji"},{x:680,v:"10000",note:"nad"},
+  ]:[];
+  return svgAxis(y,x0,x1,segs,pinset,[[450,"// ni v merilu"]]);
+}
+function axisLen(){
+  const y=70,x0=PADX,x1=W-PADX;
+  const segs=[
+    {a:x0,b:230,cls:"bad",lab:"prekratko · < 8",rep:""},
+    {a:230,b:670,cls:"ok",lab:"dolžina 8 … 200",rep:""},
+    {a:670,b:x1,cls:"bad",lab:"predolgo · > 200",rep:""},
+  ];
+  const pins=[{x:200,v:"7",note:"pod"},{x:260,v:"8",note:"na meji"},{x:640,v:"200",note:"na meji"},{x:700,v:"201",note:"nad"}];
+  return svgAxis(y,x0,x1,segs,pins,[[450,"// dolžina gesla v znakih"]]);
+}
+function axisPrag(){
+  // tu je os v merilu: 0..12
+  const y=70,x0=PADX,x1=W-PADX, sx=v=>x0+(v/12)*(x1-x0);
+  const segs=[
+    {a:x0,b:sx(1.5),cls:"bad",lab:"< 2",rep:""},
+    {a:sx(1.5),b:sx(10.5),cls:"ok",lab:"veljavno · 2 … 10",rep:""},
+    {a:sx(10.5),b:x1,cls:"bad",lab:"> 10",rep:""},
+  ];
+  const pins=[{x:sx(1),v:"1",note:"pod"},{x:sx(2),v:"2",note:"na meji"},{x:sx(10),v:"10",note:"na meji"},{x:sx(11),v:"11",note:"nad"}];
+  const ticks=[]; for(let v=0;v<=12;v++) ticks.push([sx(v),String(v)]);
+  return svgAxis(y,x0,x1,segs,pins,[],ticks);
+}
+function svgAxis(y,x0,x1,segs,pins,notes,ticks){
+  let s=`<div class="axis"><svg viewBox="0 0 ${W} 170" role="img" aria-label="Os vnosov z razredi in mejnimi vrednostmi">`;
+  segs.forEach((g,i)=>{
+    const col=g.cls==="ok"?"var(--ok)":"var(--bad)", bg=g.cls==="ok"?"var(--ok-bg)":"var(--bad-bg)";
+    s+=`<g class="seg hide" data-i="${i}">
+      <rect x="${g.a+2}" y="${y-22}" width="${g.b-g.a-4}" height="44" rx="6" fill="${bg}" stroke="${col}" stroke-width="1.5"/>
+      <text x="${(g.a+g.b)/2}" y="${y+5}" text-anchor="middle" font-size="14" fill="${col}" style="fill:${col}">${g.lab}</text>
+      ${g.rep?`<text x="${(g.a+g.b)/2}" y="${y+46}" text-anchor="middle" font-size="12" class="muted">predstavnik: ${g.rep}</text>`:""}
+    </g>`;
+  });
+  (ticks||[]).forEach(([x,l])=>{s+=`<line x1="${x}" x2="${x}" y1="${y+22}" y2="${y+28}" stroke="var(--ink-2)"/><text x="${x}" y="${y+42}" text-anchor="middle" font-size="11" class="muted">${l}</text>`;});
+  pins.forEach((p,i)=>{
+    s+=`<g class="pin hide" data-i="${i}">
+      <line x1="${p.x}" x2="${p.x}" y1="${y-40}" y2="${y+24}" stroke="var(--pin)" stroke-width="2" stroke-dasharray="4 3"/>
+      <circle cx="${p.x}" cy="${y-44}" r="5" fill="var(--pin)"/>
+      <text x="${p.x}" y="${y-56}" text-anchor="middle" font-size="13" font-weight="600" style="fill:var(--pin)">${p.v}</text>
+       <text x="${p.x}" y="${y+(ticks?62:64)}" text-anchor="middle" font-size="11" class="muted">${p.note}</text>
+    </g>`;
+  });
+  notes.forEach(([x,t])=>{s+=`<text x="${x}" y="${y+86}" text-anchor="middle" font-size="11" class="muted">${t}</text>`;});
+  return s+`</svg></div>`;
+}
+function legend(withPins){
+  return `<div class="legend"><span><i class="sw" style="background:var(--ok-bg);border:1.5px solid var(--ok)"></i>veljaven razred</span>
+  <span><i class="sw" style="background:var(--bad-bg);border:1.5px solid var(--bad)"></i>neveljaven razred</span>
+  ${withPins?`<span><i class="sw" style="background:var(--pin)"></i>mejna vrednost (pod · na · nad)</span>`:""}</div>`;
+}
+function resultTable(rows){
+  const tag={ok:["✓ ujema se","ok"],bad:["✗ napaka","bad"],warn:["~ delno","warn"]};
+  return `<div class="tbl"><table><thead><tr><th>Vnos</th><th>Zakaj ta</th><th>Pričakovano</th><th>Dejansko</th><th>Izid</th></tr></thead><tbody>
+  ${rows.map(r=>`<tr class="row hide"><td class="v">${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td><span class="tag ${tag[r[4]][1]}">${tag[r[4]][0]}</span></td></tr>`).join("")}
+  </tbody></table></div>`;
+}
+
+/* ---------- animacija ---------- */
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+let timers=[];
+function later(fn,ms){ if(reduce){fn();return;} timers.push(setTimeout(fn,ms)); }
+function revealSegs(){ document.querySelectorAll(".seg").forEach((el,i)=>later(()=>el.classList.remove("hide"),150+i*350)); }
+function revealPins(start=0){ document.querySelectorAll(".pin").forEach((el,i)=>later(()=>el.classList.remove("hide"),start+i*320)); }
+function revealRows(start=200){ document.querySelectorAll("tr.row").forEach((el,i)=>later(()=>el.classList.remove("hide"),start+i*260)); }
+
+let cur=0;
+const stage=document.getElementById("stage"), steps=document.getElementById("steps");
+S.forEach((sc,i)=>{const b=document.createElement("button");b.type="button";b.textContent=sc.tab;b.id="step-"+i;b.onclick=()=>go(i);steps.appendChild(b);});
+function go(i){
+  timers.forEach(clearTimeout); timers=[];
+  cur=Math.max(0,Math.min(S.length-1,i));
+  stage.innerHTML=S[cur].render();
+  [...steps.children].forEach((b,j)=>{ if(j===cur) b.setAttribute("aria-current","step"); else b.removeAttribute("aria-current"); });
+  document.getElementById("prev").disabled=cur===0;
+  document.getElementById("next").textContent=cur===S.length-1?"Znova":"Naprej";
+  S[cur].play();
+  // varnost: če animacija ne teče (ozadje, posnetek), naj bo prizor po 4 s vseeno v celoti viden
+  timers.push(setTimeout(()=>document.querySelectorAll(".hide").forEach(e=>e.classList.remove("hide")),4000));
+}
+document.getElementById("prev").onclick=()=>go(cur-1);
+document.getElementById("next").onclick=()=>go(cur===S.length-1?0:cur+1);
+addEventListener("keydown",e=>{ if(e.key==="ArrowRight") go(cur+1); if(e.key==="ArrowLeft") go(cur-1); });
+const start=(()=>{const n=parseInt((location.hash||"").replace("#p",""),10);return Number.isFinite(n)?n-1:0;})();
+go(start);
+</script>
