@@ -57,7 +57,8 @@ figcaption { font-size: 13px; color: #4a5563; margin-top: 4px; }
 <table>
 <thead><tr><th>Zagon</th><th>Okolje</th><th>Rezultat</th></tr></thead>
 <tbody>
-<tr><td>Način cevovoda (<code>CI=true</code>), 9. 11. 2026</td><td>produkcijska gradnja, Chromium (headless)</td><td class="ok">5/5 uspešnih</td></tr>
+<tr><td><strong>GitHub Actions</strong>, zagon <a href="https://github.com/lovro-cus/HelpdeskKopijaZaFaks/actions/runs/42601760621">#42601760621</a>, commit <code>09ea019</code>, 9. 11. 2026</td><td>ubuntu-latest, produkcijska gradnja, Chromium</td><td class="ok">oba posla uspešna: tipi in 281 enotskih testov; 5/5 funkcionalnih testov</td></tr>
+<tr><td>Lokalno v načinu cevovoda (<code>CI=true</code>), 9. 11. 2026</td><td>produkcijska gradnja, Chromium (headless)</td><td class="ok">5/5 uspešnih</td></tr>
 <tr><td>Ponovljivost: vsak test 2×, brez ponovitev ob neuspehu</td><td>enako</td><td class="ok">10/10 uspešnih</td></tr>
 <tr><td>Lokalni razvojni način</td><td><code>next dev</code>, Google Chrome</td><td>3/5; TP-02 in TP-03 padeta <em>samo</em> pri dodatnem preverjanju konzole zaradi znane napake NAP-01</td></tr>
 <tr><td>Preverjanje z namernimi napakami v aplikaciji</td><td>produkcijska gradnja</td><td class="ok">obe napaki zaznani na pričakovanem koraku</td></tr>
@@ -208,7 +209,16 @@ bunx playwright show-report          # odpre HTML poročilo</pre>
 <p>Skripta iz 2. naloge druge napake v koraku 3 ne bi zaznala, ker je preverjala samo prisotnost besedila čakanja.</p>
 
 <h2 id="rezultati">8. Rezultati izvedbe</h2>
-<p>Zagon v načinu cevovoda 9. 11. 2026 ob 11:24 (Windows 11, Playwright 1.64.1, Chromium headless shell 156, produkcijska gradnja, prikaz 1440 × 1000, <code>sl-SI</code>). Skupno trajanje 1 min 43 s, od tega večina gradnja aplikacije. JUnit: <code>tests="5" failures="0"</code>. V nobenem testu ni bilo napak JavaScripta ali konzole.</p>
+<h3>8.1 Zagon v cevovodu GitHub Actions</h3>
+<table>
+<thead><tr><th>Posel</th><th>Rezultat</th><th>Čas (UTC)</th></tr></thead>
+<tbody>
+<tr><td>Tipi in enotski testi</td><td class="ok">uspešen</td><td>10:33:56 → 10:34:29</td></tr>
+<tr><td>Funkcionalni testi (Playwright)</td><td class="ok">uspešen</td><td>10:34:31 → 10:36:29</td></tr>
+</tbody></table>
+<p>Zagon: <a href="https://github.com/lovro-cus/HelpdeskKopijaZaFaks/actions/runs/42601760621">https://github.com/lovro-cus/HelpdeskKopijaZaFaks/actions/runs/42601760621</a> (veja <code>feature/naloga-2-funkcionalni-testi</code>, commit <code>09ea019</code>). Prejšnji zagon (<code>3de6dbe</code>) je padel že pri preverjanju tipov: datoteka <code>next-env.d.ts</code> z deklaracijami za uvoz slik ni v Gitu, zato je bila dodana <code>src/types/next-assets.d.ts</code>. Cevovod je tako odkril napako v nastavitvi projekta, ki lokalno ni bila vidna.</p>
+<h3>8.2 Podrobni rezultati po testnih primerih</h3>
+<p>Lokalni zagon v načinu cevovoda 9. 11. 2026 ob 11:24 (Windows 11, Playwright 1.64.1, Chromium headless shell 156, produkcijska gradnja, prikaz 1440 × 1000, <code>sl-SI</code>). Skupno trajanje 1 min 43 s, od tega večina gradnja aplikacije. JUnit: <code>tests="5" failures="0"</code>. V nobenem testu ni bilo napak JavaScripta ali konzole.</p>
 <table>
 <thead><tr><th>ID</th><th>Status</th><th>Trajanje</th><th>Dejanski rezultat</th><th>Dokazila</th></tr></thead>
 <tbody>
@@ -248,7 +258,7 @@ bunx playwright show-report          # odpre HTML poročilo</pre>
 <li>Testiran je samo namizni Chromium oziroma Chrome; mobilni prikaz, Firefox in WebKit niso vključeni.</li>
 <li>Pregled testnih primerov iz 3. naloge ni shranjen v repozitoriju; osnova je različica 3.0 iz 2. naloge.</li>
 <li>Pošiljanje zunanje e-pošte in finančne transakcije v lokalni kopiji niso mogoči; TP-04 preverja demo nabiralnik.</li>
-<li>Rezultati v tem poročilu so iz lokalnega zagona v načinu cevovoda; zagon na GitHub Actions se izvede ob pushu na vejo <code>feature/naloga-2-funkcionalni-testi</code>.</li>
+<li>Podrobni časi in posnetki v poglavju 8 so iz lokalnega zagona v načinu cevovoda; poročilo in posnetki zagona na GitHub Actions so v artefaktih zagona <a href="https://github.com/lovro-cus/HelpdeskKopijaZaFaks/actions/runs/42601760621">#42601760621</a>.</li>
 </ul>
 
 <h2 id="priloge">12. Priloge</h2>

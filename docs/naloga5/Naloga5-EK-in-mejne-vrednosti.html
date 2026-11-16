@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="sl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>5. naloga – EK in mejne vrednosti</title>
+<style>
+body{font:14px/1.5 system-ui,Segoe UI,sans-serif;max-width:1100px;margin:24px auto;padding:0 16px;color:#1d1d1f;background:#fff}
+h1{font-size:24px}h2{font-size:19px;margin-top:32px;border-bottom:1px solid #ddd;padding-bottom:4px}h3{font-size:15px;margin-top:20px}
+table{border-collapse:collapse;width:100%;margin:8px 0 16px;font-size:12.5px}
+th,td{border:1px solid #ccc;padding:4px 6px;vertical-align:top;text-align:left}th{background:#f2f2f4}
+code{font-family:Consolas,monospace;background:#f4f4f6;padding:0 3px}
+pre{background:#f7f7f9;border:1px solid #e2e2e6;padding:10px;overflow-x:auto}pre code{background:none}
+blockquote{border-left:3px solid #999;margin:8px 0;padding:2px 12px;color:#444}
+hr{border:0;border-top:1px solid #ddd;margin:28px 0}
+@media print{body{margin:0;max-width:none}h2{break-before:page}h2:first-of-type{break-before:auto}tr,pre{break-inside:avoid}}
+</style></head><body>
+<h1>5. naloga – Ekvivalenčne kategorije in mejne vrednosti</h1>
+<p><strong>Projekt:</strong> HelpDesk – podpora strankam spletne trgovine z oblačili (izmišljena trgovina Kroj)
+<strong>Osnova:</strong> testni primeri iz 2. naloge (<code>docs/naloga2/testni-primeri-v3.md</code>, različica 3.0)
+<strong>Datum:</strong> 16. 11. 2026
+<strong>Pripravil:</strong> agent Claude Code; študent pregleda dokument in dopiše svoje ime pred oddajo.</p>
+<h2>1. Uvod</h2>
+<p>Naloga zahteva, da na treh testnih primerih z vnosi uporabimo dva pristopa črne škatle:</p>
+<ol>
+<li><strong>particioniranje vhodnih podatkov na ekvivalenčne kategorije (EK)</strong> – vhode razdelimo v razrede, v katerih se aplikacija obnaša enako. Iz vsakega razreda testiramo enega predstavnika.</li>
+<li><strong>analiza mejnih vrednosti (MV)</strong> – pri vsakem urejenem razponu testiramo vrednosti na meji in tik ob njej (min − 1, min, min + 1, max − 1, max, max + 1).</li>
+</ol>
+<p>Izbrani testni primeri:</p>
+<table>
+<thead>
+<tr><th>ID</th><th>Testni primer</th><th>Vir</th><th>Vnosi</th><th>Številski vnos</th></tr>
+</thead>
+<tbody>
+<tr><td>TP-01</td><td>Odpiranje novega ticketa</td><td>2. naloga, dopolnjen</td><td>Št. naročila, Vrednost naročila</td><td>da – številka naročila in znesek</td></tr>
+<tr><td>TP-05</td><td>Ustvarjanje uporabnika (podvojeno in neveljavno ime)</td><td>2. naloga, dopolnjen</td><td>Uporabniško ime, Ime in priimek, Nivo</td><td>da – nivo (1–5); dolžine vnosov</td></tr>
+<tr><td>TP-06</td><td>Zamenjava gesla ob prvi prijavi</td><td><strong>nov</strong></td><td>Trenutno geslo, Novo geslo, Ponovi novo geslo</td><td>da – dolžina gesla (8–200)</td></tr>
+</tbody>
+</table>
+<p>TP-02, TP-03 in TP-04 nimata primernih vnosov (TP-03 ima samo potrditveno polje in prosto besedilo). Zato smo dodali TP-06.</p>
+<h3>1.1 Vir specifikacij</h3>
+<p>Aplikacija nima ločene specifikacije pravil za vnos. <code>docs/FUNKCIONALNOSTI.md</code> opisuje samo, kaj uporabnik vpiše, ne pa omejitev. Pravila smo zato vzeli iz:</p>
+<ul>
+<li><strong>vmesnika</strong> – atributi polj (<code>required</code>, <code>maxLength</code>, <code>minLength</code>, <code>pattern</code>) in sprotni seznam zahtev za geslo,</li>
+<li><strong>strežniških akcij</strong> – <code>src/lib/actions/issues.ts</code> (<code>createIssue</code>), <code>src/lib/actions/admin.ts</code> (<code>createUser</code>), <code>src/lib/actions/auth.ts</code> (<code>changeOwnPassword</code>), <code>src/lib/password-rules.ts</code>,</li>
+<li><strong>besedil napak</strong> – slovenski del <code>src/lib/i18n/dictionaries.ts</code>.</li>
+</ul>
+<p>Kjer pravila ni ali je pomanjkljivo, smo ga <strong>smiselno dodali</strong>. Dodana pravila so v tabelah označena z <strong>[dodano]</strong>. Pri njih je pričakovani rezultat zapisan po dodanem pravilu, ne po trenutnem delovanju kode. Če se koda obnaša drugače, je to v poglavju 5 zapisano kot sum napake ali odprto vprašanje.</p>
+<h3>1.2 Oznake</h3>
+<pre><code class="language-text">EK-xx   ekvivalenčna kategorija         V = veljavna   N = neveljavna
+MV-xx   mejna vrednost
+TP-01.03  tretja izvedbena različica testnega primera TP-01
+</code></pre>
+<h3>1.3 Skupni predpogoji</h3>
+<p>Enako kot v 2. nalogi: aplikacija teče lokalno (<code>bun run dev</code>, http://localhost:3000) z ločeno testno bazo. Pred vsakim testnim primerom požene tester <code>bun run db:seed</code>. Vmesnik je v slovenščini. Demo geslo je <code>Kroj-Demo-2026</code>. Če ena različica spremeni bazo (npr. ustvari ticket), naslednje različice uporabljajo druge vrednosti, zato seme ni treba pognati med različicami, razen kjer je to izrecno napisano.</p>
+<p>Pri poljih z atributom <code>required</code>, <code>minLength</code> ali <code>pattern</code> vnos zavrne že brskalnik. Brskalnik pokaže svoje opozorilo ob polju. Besedilo je odvisno od brskalnika, zato ga ne navajamo dobesedno. Pri teh različicah je merilo uspeha: obrazec se ne pošlje in v bazi ni spremembe.</p>
+<hr />
+<h2>2. TP-01 – Odpiranje novega ticketa (dopolnjen)</h2>
+<h3>2.1 Osnovni podatki</h3>
+<table>
+<thead>
+<tr><th>Atribut</th><th>Vrednost</th></tr>
+</thead>
+<tbody>
+<tr><td>ID</td><td>TP-01</td></tr>
+<tr><td>Naslov</td><td>Odpiranje ticketa – preverjanje vnosa »Št. naročila« in »Vrednost naročila«</td></tr>
+<tr><td>Funkcionalnost</td><td>F-01 – Odpiranje ticketa</td></tr>
+<tr><td>Prioriteta</td><td>Visoka – številka naročila je ključ, po katerem aplikacija poveže ticket, pošto in pošiljke. Napačna ali podvojena številka pokvari vse nadaljnje tokove.</td></tr>
+<tr><td>Vrsta</td><td>Pozitiven in negativen (različice)</td></tr>
+<tr><td>Tehnika</td><td>Ekvivalenčne kategorije, mejne vrednosti</td></tr>
+<tr><td>Predpogoji</td><td>Sveže seme. Prijavljen je <code>Admin</code>. Odprta je stran <strong>Tiketi</strong> (<code>/orders</code>). Naročila 3001–3199 in 912 ne obstajajo. Naročilo <strong>2125</strong> je odprto (KRJ-15, lastnica Nina Vidmar). Naročilo <strong>0912</strong> je zaključeno in arhivirano.</td></tr>
+<tr><td>Fiksni testni podatki</td><td>Vrsta težave <code>Kakovost</code>; Naslov <code>Test EK/MV</code>; E-mail <code>nova.stranka@example.com</code>; Ime stranke <code>Nova Stranka</code>; Prioriteta privzeta; Prevzame privzeto (Administrator). Spreminja se samo vnos, ki ga navaja posamezna različica.</td></tr>
+</tbody>
+</table>
+<h3>2.2 Specifikacija vnosa</h3>
+<table>
+<thead>
+<tr><th>#</th><th>Pravilo</th><th>Vir</th></tr>
+</thead>
+<tbody>
+<tr><td>S1-1</td><td>»Št. naročila« je obvezna. Prazno polje zavrne brskalnik. Vnos samo iz presledkov zavrne strežnik s sporočilom »Št. naročila je obvezna.«</td><td>vmesnik (<code>required</code>), <code>createIssue</code></td></tr>
+<tr><td>S1-2</td><td>Aplikacija odstrani presledke na začetku in koncu ter en vodilni znak <code>#</code>.</td><td><code>createIssue</code></td></tr>
+<tr><td>S1-3</td><td>Dovoljeni znaki: <code>A–Z</code>, <code>a–z</code>, <code>0–9</code>, <code>#</code>, <code>-</code>, <code>_</code>, <code>.</code> in presledek. Za druge znake (npr. <code>/</code>, <code>č</code>, <code>@</code>) strežnik vrne »Št. naročila vsebuje nedovoljene znake.« Isto sporočilo dobi vnos <code>#</code> sam, ker po odstranitvi <code>#</code> ostane prazen niz.</td><td><code>createIssue</code></td></tr>
+<tr><td>S1-4</td><td>Dolžina po čiščenju: <strong>1–40 znakov</strong>. Polje ne sprejme več kot 40 znakov (<code>maxLength=40</code>).</td><td>vmesnik, <code>createIssue</code></td></tr>
+<tr><td>S1-5</td><td>Številka je enolična. Primerjava ne loči vodilnega <code>#</code>, presledkov in velikih/malih črk (<code>#2125</code>, <code>21 25</code>, <code>2125</code> so ista številka). Vodilne ničle niso odstranjene (<code>0912</code> in <code>912</code> sta različni številki).</td><td><code>orderNumberKey</code></td></tr>
+<tr><td>S1-6</td><td>Pri podvojeni odprti številki se odpre okno »Naročilo je že odprto« z besedilom »Naročilo #2125 je že odprto in ga ima Nina Vidmar.«. Pri podvojeni arhivirani številki se odpre okno »Naročilo je že arhivirano« z besedilom »Naročilo #0912 je že bilo obravnavano in arhivirano. Ga želiš ponovno odpreti?«. Ticket se ne ustvari.</td><td><code>NewOrderSheet.tsx</code>, slovar</td></tr>
+<tr><td>S2-1 <strong>[dodano]</strong></td><td>»Vrednost naročila« ni obvezna. Prazno polje pomeni, da vrednost ni znana.</td><td>dodano</td></tr>
+<tr><td>S2-2 <strong>[dodano]</strong></td><td>Veljavna vrednost je število od <strong>0,00 do 10 000,00</strong> (EUR ali izbrana valuta). Decimalno ločilo je vejica ali pika. Dovoljeni sta največ <strong>2 decimalki</strong>.</td><td>dodano – trgovina z oblačili nima naročil nad 10 000</td></tr>
+<tr><td>S2-3 <strong>[dodano]</strong></td><td>Negativna vrednost, vrednost nad 10 000,00, vrednost s 3 ali več decimalkami in neštevilski vnos so neveljavni. Aplikacija ticketa ne ustvari in prikaže napako »Vrednost naročila mora biti število med 0,00 in 10 000,00.«</td><td>dodano</td></tr>
+</tbody>
+</table>
+<h3>2.3 Ekvivalenčne kategorije</h3>
+<table>
+<thead>
+<tr><th>EK</th><th>Vnos</th><th>Kategorija</th><th>V/N</th><th>Predstavnik</th></tr>
+</thead>
+<tbody>
+<tr><td>EK-01</td><td>Št. naročila</td><td>samo števke, nova številka, dolžina 1–40</td><td>V</td><td><code>3001</code></td></tr>
+<tr><td>EK-02</td><td>Št. naročila</td><td>z vodilnim <code>#</code></td><td>V</td><td><code>#3002</code> (shrani se <code>3002</code>)</td></tr>
+<tr><td>EK-03</td><td>Št. naročila</td><td>z drugimi dovoljenimi znaki (črke, <code>-</code>, <code>_</code>, <code>.</code>)</td><td>V</td><td><code>KRJ-3003_a.b</code></td></tr>
+<tr><td>EK-04</td><td>Št. naročila</td><td>presledki na začetku in koncu</td><td>V</td><td><code>␣␣3004␣␣</code> (shrani se <code>3004</code>)</td></tr>
+<tr><td>EK-05</td><td>Št. naročila</td><td>prazno polje</td><td>N</td><td>`` (prazno)</td></tr>
+<tr><td>EK-06</td><td>Št. naročila</td><td>samo presledki</td><td>N</td><td><code>␣␣␣</code></td></tr>
+<tr><td>EK-07</td><td>Št. naročila</td><td>nedovoljen znak</td><td>N</td><td><code>3005/1</code></td></tr>
+<tr><td>EK-08</td><td>Št. naročila</td><td>nedovoljen znak – črka s strešico</td><td>N</td><td><code>čč3006</code></td></tr>
+<tr><td>EK-09</td><td>Št. naročila</td><td>samo <code>#</code></td><td>N</td><td><code>#</code></td></tr>
+<tr><td>EK-10</td><td>Št. naročila</td><td>daljše od 40 znakov</td><td>N</td><td>41 znakov (glej MV)</td></tr>
+<tr><td>EK-11</td><td>Št. naročila</td><td>podvojena odprta številka – enak zapis</td><td>N</td><td><code>2125</code></td></tr>
+<tr><td>EK-12</td><td>Št. naročila</td><td>podvojena odprta številka – drug zapis</td><td>N</td><td><code>#21 25</code></td></tr>
+<tr><td>EK-13</td><td>Št. naročila</td><td>podvojena arhivirana številka</td><td>N</td><td><code>0912</code></td></tr>
+<tr><td>EK-14</td><td>Št. naročila</td><td>vodilne ničle odstranjene – nova številka</td><td>V</td><td><code>912</code></td></tr>
+<tr><td>EK-15</td><td>Vrednost naročila</td><td>prazno</td><td>V</td><td>`` (prazno)</td></tr>
+<tr><td>EK-16</td><td>Vrednost naročila</td><td>celo število v razponu</td><td>V</td><td><code>129</code></td></tr>
+<tr><td>EK-17</td><td>Vrednost naročila</td><td>decimalna vejica, ≤ 2 decimalki</td><td>V</td><td><code>129,50</code></td></tr>
+<tr><td>EK-18</td><td>Vrednost naročila</td><td>decimalna pika, ≤ 2 decimalki</td><td>V</td><td><code>129.50</code></td></tr>
+<tr><td>EK-19</td><td>Vrednost naročila</td><td>negativno število</td><td>N</td><td><code>-10</code></td></tr>
+<tr><td>EK-20</td><td>Vrednost naročila</td><td>nad zgornjo mejo</td><td>N</td><td><code>25000</code></td></tr>
+<tr><td>EK-21</td><td>Vrednost naročila</td><td>3 ali več decimalk</td><td>N</td><td><code>12,345</code></td></tr>
+<tr><td>EK-22</td><td>Vrednost naročila</td><td>neštevilski vnos</td><td>N</td><td><code>sto evrov</code></td></tr>
+</tbody>
+</table>
+<h3>2.4 Mejne vrednosti</h3>
+<p>Dolžina številke naročila (1–40 znakov):</p>
+<pre><code class="language-text"> dolžina:   0      1      2   ...   39     40     41
+            |------[==========================]------|
+            N      V      V          V      V      N
+          MV-01  MV-02  MV-03      MV-04  MV-05  MV-06
+</code></pre>
+<p>Vrednost naročila (0,00–10 000,00) <strong>[dodano]</strong>:</p>
+<pre><code class="language-text"> znesek:  -0,01   0,00   0,01  ...  9 999,99  10 000,00  10 000,01
+            |------[================================]---------|
+            N      V      V            V          V          N
+          MV-07  MV-08  MV-09        MV-10      MV-11      MV-12
+
+ decimalke:  2 = V (MV-13: 0,99)    3 = N (MV-14: 0,999)
+</code></pre>
+<table>
+<thead>
+<tr><th>MV</th><th>Vnos</th><th>Meja</th><th>Vrednost</th><th>V/N</th></tr>
+</thead>
+<tbody>
+<tr><td>MV-01</td><td>Št. naročila</td><td>min − 1 (0 znakov)</td><td>``</td><td>N</td></tr>
+<tr><td>MV-02</td><td>Št. naročila</td><td>min (1 znak)</td><td><code>7</code></td><td>V</td></tr>
+<tr><td>MV-03</td><td>Št. naročila</td><td>min + 1 (2 znaka)</td><td><code>71</code></td><td>V</td></tr>
+<tr><td>MV-04</td><td>Št. naročila</td><td>max − 1 (39 znakov)</td><td><code>3</code> + 38 × <code>9</code></td><td>V</td></tr>
+<tr><td>MV-05</td><td>Št. naročila</td><td>max (40 znakov)</td><td><code>4</code> + 39 × <code>9</code></td><td>V</td></tr>
+<tr><td>MV-06</td><td>Št. naročila</td><td>max + 1 (41 znakov)</td><td><code>5</code> + 40 × <code>9</code></td><td>N – polje sprejme le 40 znakov</td></tr>
+<tr><td>MV-07</td><td>Vrednost naročila</td><td>min − 0,01</td><td><code>-0,01</code></td><td>N</td></tr>
+<tr><td>MV-08</td><td>Vrednost naročila</td><td>min</td><td><code>0,00</code></td><td>V</td></tr>
+<tr><td>MV-09</td><td>Vrednost naročila</td><td>min + 0,01</td><td><code>0,01</code></td><td>V</td></tr>
+<tr><td>MV-10</td><td>Vrednost naročila</td><td>max − 0,01</td><td><code>9999,99</code></td><td>V</td></tr>
+<tr><td>MV-11</td><td>Vrednost naročila</td><td>max</td><td><code>10000,00</code></td><td>V</td></tr>
+<tr><td>MV-12</td><td>Vrednost naročila</td><td>max + 0,01</td><td><code>10000,01</code></td><td>N</td></tr>
+<tr><td>MV-13</td><td>Vrednost naročila</td><td>največ decimalk (2)</td><td><code>0,99</code></td><td>V</td></tr>
+<tr><td>MV-14</td><td>Vrednost naročila</td><td>1 decimalka preveč (3)</td><td><code>0,999</code></td><td>N</td></tr>
+</tbody>
+</table>
+<h3>2.5 Koraki (skupni za vse različice)</h3>
+<table>
+<thead>
+<tr><th>#</th><th>Korak</th><th>Pričakovani odziv</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>Na strani <strong>Tiketi</strong> klikni <strong>Nov ticket</strong>.</td><td>Odpre se predal »Nov ticket«. Kazalec je v polju »Št. naročila«.</td></tr>
+<tr><td>2</td><td>Izberi vrsto <strong>Kakovost</strong>. Vpiši Naslov in E-mail iz fiksnih podatkov.</td><td>Vrednosti so vpisane.</td></tr>
+<tr><td>3</td><td>Klikni <strong>Podatki o stranki in pošiljki</strong>. Vpiši »Ime stranke«.</td><td>Razdelek se razpre.</td></tr>
+<tr><td>4</td><td>V »Št. naročila« in »Vrednost naročila« vpiši vrednosti iz izbrane različice (tabela 2.6). Če različica ne navaja vrednosti naročila, polje pusti prazno. Če ne navaja številke naročila, uporabi <code>3100</code> + zaporedna številka različice (npr. <code>3115</code>).</td><td>Vrednosti so vpisane. Pri MV-06 polje vsebuje samo prvih 40 znakov.</td></tr>
+<tr><td>5</td><td>Klikni <strong>Odpri naročilo</strong>.</td><td>Odziv iz stolpca »Pričakovani rezultat«.</td></tr>
+<tr><td>6</td><td>Pri veljavni različici osveži stran ticketa in preveri vrednosti v razdelku s podrobnostmi. Pri neveljavni zapri predal in na strani <strong>Tiketi</strong> poišči številko.</td><td>Veljavna: vrednosti so shranjene. Neveljavna: novega ticketa ni.</td></tr>
+</tbody>
+</table>
+<h3>2.6 Izvedbene različice</h3>
+<table>
+<thead>
+<tr><th>Različica</th><th>Št. naročila</th><th>Vrednost naročila</th><th>Pokrije</th><th>Pričakovani rezultat</th></tr>
+</thead>
+<tbody>
+<tr><td>TP-01.01</td><td><code>3001</code></td><td><code>129</code></td><td>EK-01, EK-16</td><td>Ticket se ustvari (<code>/orders/KRJ-n</code>). Številka 3001, »Vrednost naročila« 129.</td></tr>
+<tr><td>TP-01.02</td><td><code>#3002</code></td><td>–</td><td>EK-02, EK-15</td><td>Ticket se ustvari s številko <code>3002</code> (brez <code>#</code>). Vrednost naročila je prazna.</td></tr>
+<tr><td>TP-01.03</td><td><code>KRJ-3003_a.b</code></td><td><code>129,50</code></td><td>EK-03, EK-17</td><td>Ticket se ustvari s številko <code>KRJ-3003_a.b</code>. Vrednost 129,5.</td></tr>
+<tr><td>TP-01.04</td><td><code>␣␣3004␣␣</code></td><td><code>129.50</code></td><td>EK-04, EK-18</td><td>Ticket se ustvari s številko <code>3004</code>. Vrednost 129,5.</td></tr>
+<tr><td>TP-01.05</td><td>`` (prazno)</td><td>–</td><td>EK-05, MV-01</td><td>Brskalnik ne pošlje obrazca in označi polje »Št. naročila«. Ticket se ne ustvari.</td></tr>
+<tr><td>TP-01.06</td><td><code>␣␣␣</code></td><td>–</td><td>EK-06</td><td>Predal ostane odprt s sporočilom »Št. naročila je obvezna.« Ticket se ne ustvari.</td></tr>
+<tr><td>TP-01.07</td><td><code>3005/1</code></td><td>–</td><td>EK-07</td><td>Predal ostane odprt s sporočilom »Št. naročila vsebuje nedovoljene znake.«</td></tr>
+<tr><td>TP-01.08</td><td><code>čč3006</code></td><td>–</td><td>EK-08</td><td>»Št. naročila vsebuje nedovoljene znake.«</td></tr>
+<tr><td>TP-01.09</td><td><code>#</code></td><td>–</td><td>EK-09</td><td>»Št. naročila vsebuje nedovoljene znake.«</td></tr>
+<tr><td>TP-01.10</td><td><code>7</code></td><td>–</td><td>MV-02</td><td>Ticket se ustvari s številko <code>7</code>.</td></tr>
+<tr><td>TP-01.11</td><td><code>71</code></td><td>–</td><td>MV-03</td><td>Ticket se ustvari s številko <code>71</code>.</td></tr>
+<tr><td>TP-01.12</td><td><code>3</code> + 38 × <code>9</code> (39 zn.)</td><td>–</td><td>MV-04</td><td>Ticket se ustvari, številka ima 39 znakov.</td></tr>
+<tr><td>TP-01.13</td><td><code>4</code> + 39 × <code>9</code> (40 zn.)</td><td>–</td><td>MV-05</td><td>Ticket se ustvari, številka ima 40 znakov.</td></tr>
+<tr><td>TP-01.14</td><td><code>5</code> + 40 × <code>9</code> (41 zn.)</td><td>–</td><td>MV-06, EK-10</td><td>Polje sprejme samo 40 znakov (zadnji <code>9</code> ostane zunaj). Ticket se ustvari s 40-mestno številko <code>5</code> + 39 × <code>9</code>. 41-mestna številka se nikoli ne shrani.</td></tr>
+<tr><td>TP-01.15</td><td><code>2125</code></td><td>–</td><td>EK-11</td><td>Odpre se okno »Naročilo je že odprto«: »Naročilo #2125 je že odprto in ga ima Nina Vidmar.« Nov ticket se ne ustvari.</td></tr>
+<tr><td>TP-01.16</td><td><code>#21 25</code></td><td>–</td><td>EK-12</td><td>Enako okno kot TP-01.15 za #2125.</td></tr>
+<tr><td>TP-01.17</td><td><code>0912</code></td><td>–</td><td>EK-13</td><td>Odpre se okno »Naročilo je že arhivirano«: »Naročilo #0912 je že bilo obravnavano in arhivirano. Ga želiš ponovno odpreti?«. Tester okno zapre brez ponovnega odpiranja.</td></tr>
+<tr><td>TP-01.18</td><td><code>912</code></td><td>–</td><td>EK-14</td><td>Ticket se ustvari s številko <code>912</code> (ni podvojitev <code>0912</code>).</td></tr>
+<tr><td>TP-01.19</td><td>–</td><td><code>-0,01</code></td><td>MV-07</td><td><strong>[dodano]</strong> Predal ostane odprt s sporočilom »Vrednost naročila mora biti število med 0,00 in 10 000,00.« Ticket se ne ustvari.</td></tr>
+<tr><td>TP-01.20</td><td>–</td><td><code>-10</code></td><td>EK-19</td><td><strong>[dodano]</strong> Enako kot TP-01.19.</td></tr>
+<tr><td>TP-01.21</td><td>–</td><td><code>0,00</code></td><td>MV-08</td><td>Ticket se ustvari. Vrednost 0.</td></tr>
+<tr><td>TP-01.22</td><td>–</td><td><code>0,01</code></td><td>MV-09</td><td>Ticket se ustvari. Vrednost 0,01.</td></tr>
+<tr><td>TP-01.23</td><td>–</td><td><code>9999,99</code></td><td>MV-10</td><td>Ticket se ustvari. Vrednost 9999,99.</td></tr>
+<tr><td>TP-01.24</td><td>–</td><td><code>10000,00</code></td><td>MV-11</td><td>Ticket se ustvari. Vrednost 10000.</td></tr>
+<tr><td>TP-01.25</td><td>–</td><td><code>10000,01</code></td><td>MV-12</td><td><strong>[dodano]</strong> Napaka kot TP-01.19.</td></tr>
+<tr><td>TP-01.26</td><td>–</td><td><code>25000</code></td><td>EK-20</td><td><strong>[dodano]</strong> Napaka kot TP-01.19.</td></tr>
+<tr><td>TP-01.27</td><td>–</td><td><code>0,99</code></td><td>MV-13</td><td>Ticket se ustvari. Vrednost 0,99.</td></tr>
+<tr><td>TP-01.28</td><td>–</td><td><code>0,999</code></td><td>MV-14</td><td><strong>[dodano]</strong> Napaka kot TP-01.19.</td></tr>
+<tr><td>TP-01.29</td><td>–</td><td><code>12,345</code></td><td>EK-21</td><td><strong>[dodano]</strong> Napaka kot TP-01.19.</td></tr>
+<tr><td>TP-01.30</td><td>–</td><td><code>sto evrov</code></td><td>EK-22</td><td><strong>[dodano]</strong> Napaka kot TP-01.19.</td></tr>
+</tbody>
+</table>
+<p><strong>Končni pričakovani rezultat:</strong> vse veljavne različice ustvarijo ticket s pravilno očiščeno številko in vrednostjo. Vse neveljavne različice ticketa ne ustvarijo in prikažejo navedeno sporočilo ali okno.</p>
+<p><strong>Stanje po izvedbi:</strong> v bazi so novi ticketi samo za veljavne različice. Čiščenje: <code>bun run db:seed</code>.</p>
+<hr />
+<h2>3. TP-05 – Ustvarjanje uporabnika (dopolnjen)</h2>
+<h3>3.1 Osnovni podatki</h3>
+<table>
+<thead>
+<tr><th>Atribut</th><th>Vrednost</th></tr>
+</thead>
+<tbody>
+<tr><td>ID</td><td>TP-05</td></tr>
+<tr><td>Naslov</td><td>Ustvarjanje uporabnika – preverjanje vnosa »Uporabniško ime«, »Ime in priimek« in »Nivo«</td></tr>
+<tr><td>Funkcionalnost</td><td>F-08 – Upravljanje uporabnikov</td></tr>
+<tr><td>Prioriteta</td><td>Srednja – napačno uporabniško ime prepreči prijavo ali povzroči zamenjavo računov. Opravilo izvaja samo administrator.</td></tr>
+<tr><td>Vrsta</td><td>Pozitiven in negativen (različice)</td></tr>
+<tr><td>Tehnika</td><td>Ekvivalenčne kategorije, mejne vrednosti</td></tr>
+<tr><td>Predpogoji</td><td>Sveže seme. Obstaja 6 uporabnikov: <code>Admin</code>, <code>gost</code>, <code>nina</code>, <code>ali</code>, <code>eva</code>, <code>marko</code>. Prijavljen je <code>Admin</code>. Odprta je <strong>Nadzorna plošča → Uporabniki</strong>.</td></tr>
+<tr><td>Fiksni testni podatki</td><td>Jezik <code>Slovenščina</code>; Nivo <code>1. nivo</code>; Začetno geslo <code>Zacetno-Geslo-1</code> (izpolnjuje vse zahteve); E-mail prazno; Administrator neoznačeno. Spreminja se samo vnos, ki ga navaja različica. Privzeto Ime in priimek: <code>Test Uporabnik</code>.</td></tr>
+</tbody>
+</table>
+<h3>3.2 Specifikacija vnosa</h3>
+<table>
+<thead>
+<tr><th>#</th><th>Pravilo</th><th>Vir</th></tr>
+</thead>
+<tbody>
+<tr><td>S3-1</td><td>»Uporabniško ime« ima <strong>3–32 znakov</strong>. Dovoljeni znaki: <code>A–Z</code>, <code>a–z</code>, <code>0–9</code>, <code>.</code>, <code>_</code>, <code>-</code>. Vmesnik to preveri z <code>minLength</code>, <code>maxLength=32</code> in <code>pattern</code>. Strežnik vrne »Uporabniško ime: 3–32 znakov; dovoljeni so črke, številke, . _ -.«</td><td>vmesnik, <code>createUser</code></td></tr>
+<tr><td>S3-2</td><td>Uporabniško ime je enolično. Za obstoječe ime strežnik vrne »To uporabniško ime je že zasedeno.«</td><td><code>createUser</code></td></tr>
+<tr><td>S3-3 <strong>[dodano]</strong></td><td>Enoličnost ne loči velikih in malih črk. <code>Nina</code> in <code>NINA</code> sta zasedeni, ker obstaja <code>nina</code>. Razlog: dva računa, ki se razlikujeta samo po velikih črkah, uporabnik težko loči.</td><td>dodano</td></tr>
+<tr><td>S3-4</td><td>»Ime in priimek« je obvezno, <strong>1–80 znakov</strong> po odstranitvi presledkov na robovih. Prazno polje zavrne brskalnik, samo presledke strežnik s sporočilom »Ime je obvezno.«</td><td>vmesnik (<code>required</code>, <code>maxLength=80</code>), <code>createUser</code></td></tr>
+<tr><td>S3-5</td><td>»Nivo« je celo število <strong>1–5</strong>. Vmesnik ponuja samo spustni seznam z vrednostmi 1–5. Za drugo vrednost strežnik vrne »Nivo mora biti med 1 in 5.«</td><td>vmesnik, <code>createUser</code>, <code>MAX_LEVEL = 5</code></td></tr>
+</tbody>
+</table>
+<h3>3.3 Ekvivalenčne kategorije</h3>
+<table>
+<thead>
+<tr><th>EK</th><th>Vnos</th><th>Kategorija</th><th>V/N</th><th>Predstavnik</th></tr>
+</thead>
+<tbody>
+<tr><td>EK-30</td><td>Uporabniško ime</td><td>samo male črke, nova vrednost</td><td>V</td><td><code>tester</code></td></tr>
+<tr><td>EK-31</td><td>Uporabniško ime</td><td>mešanica črk, števk in <code>. _ -</code></td><td>V</td><td><code>Test.User_1-a</code></td></tr>
+<tr><td>EK-32</td><td>Uporabniško ime</td><td>presledek v imenu</td><td>N</td><td><code>test user</code></td></tr>
+<tr><td>EK-33</td><td>Uporabniško ime</td><td>črka s strešico</td><td>N</td><td><code>čebela</code></td></tr>
+<tr><td>EK-34</td><td>Uporabniško ime</td><td>drug nedovoljen znak</td><td>N</td><td><code>test@kroj</code></td></tr>
+<tr><td>EK-35</td><td>Uporabniško ime</td><td>prekratko (&lt; 3)</td><td>N</td><td>glej MV-30</td></tr>
+<tr><td>EK-36</td><td>Uporabniško ime</td><td>predolgo (&gt; 32)</td><td>N</td><td>glej MV-35</td></tr>
+<tr><td>EK-37</td><td>Uporabniško ime</td><td>obstoječe – enak zapis</td><td>N</td><td><code>nina</code></td></tr>
+<tr><td>EK-38</td><td>Uporabniško ime</td><td>obstoječe – druge velike črke <strong>[dodano]</strong></td><td>N</td><td><code>NINA</code></td></tr>
+<tr><td>EK-39</td><td>Ime in priimek</td><td>običajno ime s šumniki</td><td>V</td><td><code>Žan Čuk</code></td></tr>
+<tr><td>EK-40</td><td>Ime in priimek</td><td>prazno</td><td>N</td><td>``</td></tr>
+<tr><td>EK-41</td><td>Ime in priimek</td><td>samo presledki</td><td>N</td><td><code>␣␣␣</code></td></tr>
+<tr><td>EK-42</td><td>Ime in priimek</td><td>daljše od 80 znakov</td><td>N</td><td>glej MV-41</td></tr>
+<tr><td>EK-43</td><td>Nivo</td><td>vrednost iz seznama 1–5</td><td>V</td><td><code>3. nivo</code></td></tr>
+<tr><td>EK-44</td><td>Nivo</td><td>vrednost zunaj seznama (0, 6, <code>abc</code>)</td><td>N</td><td>ni dosegljiva prek vmesnika – glej opombo</td></tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Opomba k EK-44:</strong> spustni seznam ne dovoli vnosa izven 1–5. Kategorija je neveljavna, a jo vmesnik v celoti zapre. Testiramo, da seznam ponuja <strong>natanko</strong> vrednosti 1–5 (TP-05.22). Neposreden poskus z vrednostjo 0 ali 6 bi zahteval spremembo zahteve v brskalniku, kar ni del testiranja črne škatle skozi vmesnik.</p>
+</blockquote>
+<h3>3.4 Mejne vrednosti</h3>
+<p>Dolžina uporabniškega imena (3–32) in imena (1–80):</p>
+<pre><code class="language-text"> uporabniško ime:   2      3      4   ...   31     32     33
+                    |------[==========================]------|
+                    N      V      V          V      V      N
+                  MV-30  MV-31  MV-32      MV-33  MV-34  MV-35
+
+ ime in priimek:    0      1      2   ...   79     80     81
+                    |------[==========================]------|
+                    N      V      V          V      V      N
+                  MV-36  MV-37  MV-38      MV-39  MV-40  MV-41
+
+ nivo (seznam):     0  |  1      2   ...    4      5  |  6
+                    N  |  V      V          V      V  |  N
+                  MV-42  MV-43  MV-44      MV-45  MV-46  MV-47
+</code></pre>
+<table>
+<thead>
+<tr><th>MV</th><th>Vnos</th><th>Meja</th><th>Vrednost</th><th>V/N</th></tr>
+</thead>
+<tbody>
+<tr><td>MV-30</td><td>Uporabniško ime</td><td>min − 1 (2)</td><td><code>ab</code></td><td>N</td></tr>
+<tr><td>MV-31</td><td>Uporabniško ime</td><td>min (3)</td><td><code>abc</code></td><td>V</td></tr>
+<tr><td>MV-32</td><td>Uporabniško ime</td><td>min + 1 (4)</td><td><code>abcd</code></td><td>V</td></tr>
+<tr><td>MV-33</td><td>Uporabniško ime</td><td>max − 1 (31)</td><td><code>u</code> + 30 × <code>a</code></td><td>V</td></tr>
+<tr><td>MV-34</td><td>Uporabniško ime</td><td>max (32)</td><td><code>v</code> + 31 × <code>a</code></td><td>V</td></tr>
+<tr><td>MV-35</td><td>Uporabniško ime</td><td>max + 1 (33)</td><td><code>w</code> + 32 × <code>a</code></td><td>N – polje sprejme le 32 znakov</td></tr>
+<tr><td>MV-36</td><td>Ime in priimek</td><td>min − 1 (0)</td><td>``</td><td>N</td></tr>
+<tr><td>MV-37</td><td>Ime in priimek</td><td>min (1)</td><td><code>N</code></td><td>V</td></tr>
+<tr><td>MV-38</td><td>Ime in priimek</td><td>min + 1 (2)</td><td><code>Na</code></td><td>V</td></tr>
+<tr><td>MV-39</td><td>Ime in priimek</td><td>max − 1 (79)</td><td>79 × <code>a</code></td><td>V</td></tr>
+<tr><td>MV-40</td><td>Ime in priimek</td><td>max (80)</td><td>80 × <code>b</code></td><td>V</td></tr>
+<tr><td>MV-41</td><td>Ime in priimek</td><td>max + 1 (81)</td><td>81 × <code>c</code></td><td>N – polje sprejme le 80 znakov</td></tr>
+<tr><td>MV-42</td><td>Nivo</td><td>min − 1 (0)</td><td>ni v seznamu</td><td>N</td></tr>
+<tr><td>MV-43</td><td>Nivo</td><td>min (1)</td><td><code>1. nivo</code></td><td>V</td></tr>
+<tr><td>MV-44</td><td>Nivo</td><td>min + 1 (2)</td><td><code>2. nivo</code></td><td>V</td></tr>
+<tr><td>MV-45</td><td>Nivo</td><td>max − 1 (4)</td><td><code>4. nivo</code></td><td>V</td></tr>
+<tr><td>MV-46</td><td>Nivo</td><td>max (5)</td><td><code>5. nivo</code></td><td>V</td></tr>
+<tr><td>MV-47</td><td>Nivo</td><td>max + 1 (6)</td><td>ni v seznamu</td><td>N</td></tr>
+</tbody>
+</table>
+<h3>3.5 Koraki (skupni za vse različice)</h3>
+<table>
+<thead>
+<tr><th>#</th><th>Korak</th><th>Pričakovani odziv</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>Na zavihku <strong>Uporabniki</strong> klikni <strong>Dodaj uporabnika</strong>.</td><td>Odpre se obrazec »Nov uporabnik«.</td></tr>
+<tr><td>2</td><td>Vpiši fiksne podatke in vrednosti iz izbrane različice (tabela 3.6). Če različica ne navaja uporabniškega imena, uporabi <code>test</code> + številka različice (npr. <code>test10</code>).</td><td>Vrednosti so vpisane. Gumb <strong>Ustvari</strong> je omogočen, ker začetno geslo izpolnjuje vse zahteve.</td></tr>
+<tr><td>3</td><td>Klikni <strong>Ustvari</strong>.</td><td>Odziv iz stolpca »Pričakovani rezultat«.</td></tr>
+<tr><td>4</td><td>Zapri obrazec, osveži seznam uporabnikov.</td><td>Veljavna različica: nov uporabnik je na seznamu z vpisanim imenom in nivojem. Neveljavna: število uporabnikov se ne spremeni.</td></tr>
+</tbody>
+</table>
+<h3>3.6 Izvedbene različice</h3>
+<table>
+<thead>
+<tr><th>Različica</th><th>Uporabniško ime</th><th>Ime in priimek</th><th>Nivo</th><th>Pokrije</th><th>Pričakovani rezultat</th></tr>
+</thead>
+<tbody>
+<tr><td>TP-05.01</td><td><code>tester</code></td><td>–</td><td>–</td><td>EK-30</td><td>Sporočilo »Uporabnik Test Uporabnik je dodan in mora ob prvi prijavi zamenjati geslo.« Uporabnik je na seznamu.</td></tr>
+<tr><td>TP-05.02</td><td><code>Test.User_1-a</code></td><td>–</td><td>–</td><td>EK-31</td><td>Uporabnik se ustvari.</td></tr>
+<tr><td>TP-05.03</td><td><code>test user</code></td><td>–</td><td>–</td><td>EK-32</td><td>Brskalnik ne pošlje obrazca (vzorec polja). Uporabnik se ne ustvari.</td></tr>
+<tr><td>TP-05.04</td><td><code>čebela</code></td><td>–</td><td>–</td><td>EK-33</td><td>Brskalnik ne pošlje obrazca. Uporabnik se ne ustvari.</td></tr>
+<tr><td>TP-05.05</td><td><code>test@kroj</code></td><td>–</td><td>–</td><td>EK-34</td><td>Brskalnik ne pošlje obrazca. Uporabnik se ne ustvari.</td></tr>
+<tr><td>TP-05.06</td><td><code>ab</code></td><td>–</td><td>–</td><td>MV-30, EK-35</td><td>Brskalnik ne pošlje obrazca (premalo znakov). Uporabnik se ne ustvari.</td></tr>
+<tr><td>TP-05.07</td><td><code>abc</code></td><td>–</td><td>–</td><td>MV-31</td><td>Uporabnik se ustvari.</td></tr>
+<tr><td>TP-05.08</td><td><code>abcd</code></td><td>–</td><td>–</td><td>MV-32</td><td>Uporabnik se ustvari.</td></tr>
+<tr><td>TP-05.09</td><td><code>u</code> + 30 × <code>a</code> (31)</td><td>–</td><td>–</td><td>MV-33</td><td>Uporabnik se ustvari.</td></tr>
+<tr><td>TP-05.10</td><td><code>v</code> + 31 × <code>a</code> (32)</td><td>–</td><td>–</td><td>MV-34</td><td>Uporabnik se ustvari.</td></tr>
+<tr><td>TP-05.11</td><td><code>w</code> + 32 × <code>a</code> (33)</td><td>–</td><td>–</td><td>MV-35, EK-36</td><td>Polje sprejme samo 32 znakov. Uporabnik se ustvari z 32-znakovnim imenom <code>w</code> + 31 × <code>a</code>. 33-znakovno ime se nikoli ne shrani.</td></tr>
+<tr><td>TP-05.12</td><td><code>nina</code></td><td><code>Nina Dvojnik</code></td><td>–</td><td>EK-37</td><td>Obrazec ostane odprt s sporočilom »To uporabniško ime je že zasedeno.« Uporabnikov je še vedno 6.</td></tr>
+<tr><td>TP-05.13</td><td><code>NINA</code></td><td><code>Nina Dvojnik</code></td><td>–</td><td>EK-38</td><td><strong>[dodano]</strong> Sporočilo »To uporabniško ime je že zasedeno.« Uporabnik se ne ustvari.</td></tr>
+<tr><td>TP-05.14</td><td>–</td><td><code>Žan Čuk</code></td><td>–</td><td>EK-39</td><td>Uporabnik se ustvari, ime je na seznamu zapisano s šumniki.</td></tr>
+<tr><td>TP-05.15</td><td>–</td><td>`` (prazno)</td><td>–</td><td>MV-36, EK-40</td><td>Brskalnik ne pošlje obrazca. Uporabnik se ne ustvari.</td></tr>
+<tr><td>TP-05.16</td><td>–</td><td><code>␣␣␣</code></td><td>–</td><td>EK-41</td><td>Obrazec ostane odprt s sporočilom »Ime je obvezno.«</td></tr>
+<tr><td>TP-05.17</td><td>–</td><td><code>N</code></td><td>–</td><td>MV-37</td><td>Uporabnik se ustvari z imenom <code>N</code>.</td></tr>
+<tr><td>TP-05.18</td><td>–</td><td><code>Na</code></td><td>–</td><td>MV-38</td><td>Uporabnik se ustvari.</td></tr>
+<tr><td>TP-05.19</td><td>–</td><td>79 × <code>a</code></td><td>–</td><td>MV-39</td><td>Uporabnik se ustvari, ime ima 79 znakov.</td></tr>
+<tr><td>TP-05.20</td><td>–</td><td>80 × <code>b</code></td><td>–</td><td>MV-40</td><td>Uporabnik se ustvari, ime ima 80 znakov.</td></tr>
+<tr><td>TP-05.21</td><td>–</td><td>81 × <code>c</code></td><td>–</td><td>MV-41, EK-42</td><td>Polje sprejme samo 80 znakov. Uporabnik se ustvari z 80-znakovnim imenom.</td></tr>
+<tr><td>TP-05.22</td><td>–</td><td>–</td><td>odpri seznam</td><td>EK-44, MV-42, MV-47</td><td>Spustni seznam »Nivo« ponuja natanko 5 možnosti: od »1. nivo« do »5. nivo«. Vrednosti 0 in 6 ni.</td></tr>
+<tr><td>TP-05.23</td><td>–</td><td>–</td><td><code>1. nivo</code></td><td>MV-43</td><td>Uporabnik se ustvari na 1. nivoju.</td></tr>
+<tr><td>TP-05.24</td><td>–</td><td>–</td><td><code>2. nivo</code></td><td>MV-44</td><td>Uporabnik se ustvari na 2. nivoju.</td></tr>
+<tr><td>TP-05.25</td><td>–</td><td>–</td><td><code>3. nivo</code></td><td>EK-43</td><td>Uporabnik se ustvari na 3. nivoju.</td></tr>
+<tr><td>TP-05.26</td><td>–</td><td>–</td><td><code>4. nivo</code></td><td>MV-45</td><td>Uporabnik se ustvari na 4. nivoju.</td></tr>
+<tr><td>TP-05.27</td><td>–</td><td>–</td><td><code>5. nivo</code></td><td>MV-46</td><td>Uporabnik se ustvari na 5. nivoju.</td></tr>
+</tbody>
+</table>
+<p><strong>Končni pričakovani rezultat:</strong> veljavne različice ustvarijo račun s pravilnim imenom in nivojem. Neveljavne različice računa ne ustvarijo. Obstoječi račun <code>nina</code> se ne spremeni.</p>
+<p><strong>Stanje po izvedbi:</strong> novi računi samo za veljavne različice, vsi z <code>mustChangePw = true</code>. Čiščenje: <code>bun run db:seed</code>.</p>
+<hr />
+<h2>4. TP-06 – Zamenjava gesla ob prvi prijavi (nov)</h2>
+<h3>4.1 Osnovni podatki</h3>
+<table>
+<thead>
+<tr><th>Atribut</th><th>Vrednost</th></tr>
+</thead>
+<tbody>
+<tr><td>ID</td><td>TP-06</td></tr>
+<tr><td>Naslov</td><td>Zamenjava gesla ob prvi prijavi – preverjanje dolžine in sestave novega gesla</td></tr>
+<tr><td>Funkcionalnost</td><td>F-08 – Upravljanje uporabnikov (račun, ki ga ustvari administrator, mora ob prvi prijavi zamenjati geslo)</td></tr>
+<tr><td>Prioriteta</td><td>Visoka – geslo varuje dostop do podatkov strank. Šibko geslo je varnostno tveganje, prestrogo preverjanje pa zaklene uporabnika.</td></tr>
+<tr><td>Vrsta</td><td>Pozitiven in negativen (različice)</td></tr>
+<tr><td>Tehnika</td><td>Ekvivalenčne kategorije, mejne vrednosti</td></tr>
+<tr><td>Predpogoji</td><td>Sveže seme. <code>nina</code> ima <code>mustChangePw = true</code> in geslo <code>Kroj-Demo-2026</code>. Tester se prijavi kot <code>nina</code> / <code>Kroj-Demo-2026</code> in je na strani <code>/geslo</code> (»Zamenjaj geslo«).</td></tr>
+<tr><td>Fiksni testni podatki</td><td>»Trenutno geslo« <code>Kroj-Demo-2026</code>. »Ponovi novo geslo« = enako kot »Novo geslo«, razen kjer različica navaja drugače.</td></tr>
+</tbody>
+</table>
+<h3>4.2 Specifikacija vnosa</h3>
+<table>
+<thead>
+<tr><th>#</th><th>Pravilo</th><th>Vir</th></tr>
+</thead>
+<tbody>
+<tr><td>S4-1</td><td>Novo geslo ima <strong>8–200 znakov</strong>. Za manj kot 8 seznam zahtev kaže »Vsaj 8 znakov« kot neizpolnjeno in gumb <strong>Shrani geslo</strong> je onemogočen. Za več kot 200 strežnik vrne »Geslo je predolgo.«</td><td><code>password-rules.ts</code>, <code>PasswordForm.tsx</code></td></tr>
+<tr><td>S4-2</td><td>Novo geslo ima vsaj eno veliko črko, eno malo črko, eno števko in en poseben znak (vsak znak, ki ni črka ali števka – tudi presledek). Črke s strešico štejejo kot črke. Če zahteva ni izpolnjena, je gumb onemogočen.</td><td><code>password-rules.ts</code></td></tr>
+<tr><td>S4-3</td><td>»Ponovi novo geslo« mora biti enako »Novo geslo«. Sicer zahteva »Gesli se ujemata« ni izpolnjena in gumb je onemogočen. Strežnik vrne »Novi gesli se ne ujemata.«</td><td><code>PasswordForm.tsx</code>, <code>changeOwnPassword</code></td></tr>
+<tr><td>S4-4</td><td>Novo geslo mora biti drugačno od trenutnega. Sicer zahteva »Drugačno od trenutnega gesla« ni izpolnjena in gumb je onemogočen.</td><td><code>PasswordForm.tsx</code>, <code>changeOwnPassword</code></td></tr>
+<tr><td>S4-5</td><td>Napačno trenutno geslo strežnik zavrne s sporočilom »Trenutno geslo ni pravilno.«</td><td><code>changeOwnPassword</code></td></tr>
+<tr><td>S4-6</td><td>Po uspešni zamenjavi aplikacija preusmeri na <code>/orders</code>.</td><td><code>changeOwnPassword</code></td></tr>
+</tbody>
+</table>
+<h3>4.3 Ekvivalenčne kategorije</h3>
+<table>
+<thead>
+<tr><th>EK</th><th>Vnos</th><th>Kategorija</th><th>V/N</th><th>Predstavnik</th></tr>
+</thead>
+<tbody>
+<tr><td>EK-50</td><td>Novo geslo</td><td>izpolnjuje vse zahteve, ASCII</td><td>V</td><td><code>Nina-Test-2026!</code></td></tr>
+<tr><td>EK-51</td><td>Novo geslo</td><td>izpolnjuje vse zahteve, črke s strešico</td><td>V</td><td><code>Čžš-Test-26</code></td></tr>
+<tr><td>EK-52</td><td>Novo geslo</td><td>poseben znak je presledek</td><td>V</td><td><code>Nina Test 2026</code></td></tr>
+<tr><td>EK-53</td><td>Novo geslo</td><td>prekratko (&lt; 8)</td><td>N</td><td>glej MV-50</td></tr>
+<tr><td>EK-54</td><td>Novo geslo</td><td>predolgo (&gt; 200)</td><td>N</td><td>glej MV-55</td></tr>
+<tr><td>EK-55</td><td>Novo geslo</td><td>brez velike črke</td><td>N</td><td><code>nina-test-2026!</code></td></tr>
+<tr><td>EK-56</td><td>Novo geslo</td><td>brez male črke</td><td>N</td><td><code>NINA-TEST-2026!</code></td></tr>
+<tr><td>EK-57</td><td>Novo geslo</td><td>brez števke</td><td>N</td><td><code>Nina-Test-dva!</code></td></tr>
+<tr><td>EK-58</td><td>Novo geslo</td><td>brez posebnega znaka</td><td>N</td><td><code>NinaTest2026</code></td></tr>
+<tr><td>EK-59</td><td>Novo geslo</td><td>enako trenutnemu</td><td>N</td><td><code>Kroj-Demo-2026</code></td></tr>
+<tr><td>EK-60</td><td>Ponovi novo geslo</td><td>drugačno od novega</td><td>N</td><td>novo <code>Nina-Test-2026!</code>, ponovi <code>Nina-Test-2027!</code></td></tr>
+<tr><td>EK-61</td><td>Trenutno geslo</td><td>napačno</td><td>N</td><td><code>Napacno-Geslo-1</code></td></tr>
+</tbody>
+</table>
+<h3>4.4 Mejne vrednosti</h3>
+<pre><code class="language-text"> dolžina gesla:   7      8      9   ...   199    200    201
+                  |------[==========================]------|
+                  N      V      V          V      V      N
+                MV-50  MV-51  MV-52      MV-53  MV-54  MV-55
+</code></pre>
+<table>
+<thead>
+<tr><th>MV</th><th>Meja</th><th>Vrednost (izpolnjuje ostale zahteve)</th><th>Dolžina</th><th>V/N</th></tr>
+</thead>
+<tbody>
+<tr><td>MV-50</td><td>min − 1</td><td><code>Ab1!xyz</code></td><td>7</td><td>N</td></tr>
+<tr><td>MV-51</td><td>min</td><td><code>Ab1!xyzw</code></td><td>8</td><td>V</td></tr>
+<tr><td>MV-52</td><td>min + 1</td><td><code>Ab1!xyzwq</code></td><td>9</td><td>V</td></tr>
+<tr><td>MV-53</td><td>max − 1</td><td><code>Ab1!</code> + 195 × <code>x</code></td><td>199</td><td>V</td></tr>
+<tr><td>MV-54</td><td>max</td><td><code>Ab1!</code> + 196 × <code>x</code></td><td>200</td><td>V</td></tr>
+<tr><td>MV-55</td><td>max + 1</td><td><code>Ab1!</code> + 197 × <code>x</code></td><td>201</td><td>N</td></tr>
+</tbody>
+</table>
+<h3>4.5 Koraki (skupni za vse različice)</h3>
+<table>
+<thead>
+<tr><th>#</th><th>Korak</th><th>Pričakovani odziv</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>Na <code>/login</code> se prijavi kot <code>nina</code> / <code>Kroj-Demo-2026</code>.</td><td>Aplikacija preusmeri na <code>/geslo</code>, naslov »Zamenjaj geslo«.</td></tr>
+<tr><td>2</td><td>Vpiši »Trenutno geslo«, »Novo geslo« in »Ponovi novo geslo« iz izbrane različice (tabela 4.6).</td><td>Seznam zahtev pod polji sproti kaže, katere zahteve so izpolnjene.</td></tr>
+<tr><td>3</td><td>Preveri stanje gumba <strong>Shrani geslo</strong>. Če je omogočen, ga klikni.</td><td>Odziv iz stolpca »Pričakovani rezultat«.</td></tr>
+<tr><td>4</td><td>Pri veljavni različici se odjavi in prijavi z novim geslom. Nato požene tester <code>bun run db:seed</code> pred naslednjo različico.</td><td>Prijava z novim geslom uspe, aplikacija ne zahteva nove zamenjave gesla.</td></tr>
+</tbody>
+</table>
+<h3>4.6 Izvedbene različice</h3>
+<table>
+<thead>
+<tr><th>Različica</th><th>Novo geslo</th><th>Drugo</th><th>Pokrije</th><th>Pričakovani rezultat</th></tr>
+</thead>
+<tbody>
+<tr><td>TP-06.01</td><td><code>Ab1!xyz</code> (7)</td><td>–</td><td>MV-50, EK-53</td><td>Zahteva »Vsaj 8 znakov« ni izpolnjena. Gumb <strong>Shrani geslo</strong> je onemogočen. Geslo se ne spremeni.</td></tr>
+<tr><td>TP-06.02</td><td><code>Ab1!xyzw</code> (8)</td><td>–</td><td>MV-51</td><td>Vse zahteve so izpolnjene. Po kliku aplikacija preusmeri na <code>/orders</code>. Prijava z <code>Ab1!xyzw</code> uspe.</td></tr>
+<tr><td>TP-06.03</td><td><code>Ab1!xyzwq</code> (9)</td><td>–</td><td>MV-52</td><td>Kot TP-06.02.</td></tr>
+<tr><td>TP-06.04</td><td><code>Ab1!</code> + 195 × <code>x</code> (199)</td><td>–</td><td>MV-53</td><td>Kot TP-06.02.</td></tr>
+<tr><td>TP-06.05</td><td><code>Ab1!</code> + 196 × <code>x</code> (200)</td><td>–</td><td>MV-54</td><td>Kot TP-06.02.</td></tr>
+<tr><td>TP-06.06</td><td><code>Ab1!</code> + 197 × <code>x</code> (201)</td><td>–</td><td>MV-55, EK-54</td><td>Gumb je omogočen (vmesnik ne preveri zgornje meje). Po kliku se pokaže »Geslo je predolgo.« Aplikacija ostane na <code>/geslo</code>. Prijava s starim geslom <code>Kroj-Demo-2026</code> še vedno vodi na <code>/geslo</code>.</td></tr>
+<tr><td>TP-06.07</td><td><code>Nina-Test-2026!</code></td><td>–</td><td>EK-50</td><td>Kot TP-06.02.</td></tr>
+<tr><td>TP-06.08</td><td><code>Čžš-Test-26</code></td><td>–</td><td>EK-51</td><td>Kot TP-06.02 (Č šteje kot velika črka).</td></tr>
+<tr><td>TP-06.09</td><td><code>Nina Test 2026</code></td><td>–</td><td>EK-52</td><td>Kot TP-06.02 (presledek šteje kot poseben znak).</td></tr>
+<tr><td>TP-06.10</td><td><code>nina-test-2026!</code></td><td>–</td><td>EK-55</td><td>»Vsaj ena velika črka« ni izpolnjena, gumb onemogočen.</td></tr>
+<tr><td>TP-06.11</td><td><code>NINA-TEST-2026!</code></td><td>–</td><td>EK-56</td><td>»Vsaj ena mala črka« ni izpolnjena, gumb onemogočen.</td></tr>
+<tr><td>TP-06.12</td><td><code>Nina-Test-dva!</code></td><td>–</td><td>EK-57</td><td>»Vsaj ena številka« ni izpolnjena, gumb onemogočen.</td></tr>
+<tr><td>TP-06.13</td><td><code>NinaTest2026</code></td><td>–</td><td>EK-58</td><td>»Vsaj en poseben znak (!?#$%…)« ni izpolnjena, gumb onemogočen.</td></tr>
+<tr><td>TP-06.14</td><td><code>Kroj-Demo-2026</code></td><td>–</td><td>EK-59</td><td>»Drugačno od trenutnega gesla« ni izpolnjena, gumb onemogočen.</td></tr>
+<tr><td>TP-06.15</td><td><code>Nina-Test-2026!</code></td><td>ponovi <code>Nina-Test-2027!</code></td><td>EK-60</td><td>»Gesli se ujemata« ni izpolnjena, gumb onemogočen.</td></tr>
+<tr><td>TP-06.16</td><td><code>Nina-Test-2026!</code></td><td>trenutno <code>Napacno-Geslo-1</code></td><td>EK-61</td><td>Gumb je omogočen. Po kliku se pokaže »Trenutno geslo ni pravilno.« Geslo se ne spremeni.</td></tr>
+</tbody>
+</table>
+<p><strong>Končni pričakovani rezultat:</strong> geslo se spremeni samo pri veljavnih različicah. Pri neveljavnih je gumb onemogočen ali strežnik vrne navedeno sporočilo, geslo pa ostane <code>Kroj-Demo-2026</code>.</p>
+<p><strong>Stanje po izvedbi:</strong> pri veljavni različici ima <code>nina</code> novo geslo in <code>mustChangePw = false</code>, stare seje so razveljavljene. Čiščenje: <code>bun run db:seed</code>.</p>
+<hr />
+<h2>5. Ugotovitve – pomanjkljive specifikacije in sumi napak</h2>
+<p>Ugotovitve so iz statičnega pregleda kode. Testov v brskalniku nismo izvedli.</p>
+<table>
+<thead>
+<tr><th>#</th><th>Testni primer</th><th>Ugotovitev</th><th>Vrsta</th></tr>
+</thead>
+<tbody>
+<tr><td>U-1</td><td>TP-01.19–TP-01.30</td><td>Polje »Vrednost naročila« nima nobenega preverjanja. Strežnik (<code>num</code> v <code>issues.ts</code>) sprejme negativno vrednost (<code>-10</code>) in poljubno veliko vrednost. Neštevilski vnos (<code>sto evrov</code>) tiho zavrže – ticket se ustvari brez vrednosti, uporabnik ne dobi opozorila. Po dodanem pravilu S2-2/S2-3 bi te različice <strong>padle</strong>.</td><td>sum napake / manjkajoča specifikacija</td></tr>
+<tr><td>U-2</td><td>TP-01.10, TP-01.11</td><td>Aplikacija sprejme številko naročila z 1 ali 2 znakoma in s črkami. Funkcija <code>looksLikeOrderNumber</code> v isti kodi pa šteje za številko naročila samo 3–10 števk. Pravila si nasprotujeta. Odločiti je treba, katero velja za Shopify številke.</td><td>odprto vprašanje</td></tr>
+<tr><td>U-3</td><td>TP-01.17, TP-01.18</td><td><code>0912</code> in <code>912</code> sta različni naročili. Če Shopify vodilne ničle ignorira, lahko nastane podvojen ticket.</td><td>odprto vprašanje</td></tr>
+<tr><td>U-4</td><td>TP-01.14, TP-05.11, TP-05.21</td><td>Strežnik vnos, daljši od meje, potiho odreže (<code>slice</code>), namesto da ga zavrne. Prek vmesnika to ni vidno zaradi <code>maxLength</code>, je pa neskladno s pravilom 1–40.</td><td>opažanje</td></tr>
+<tr><td>U-5</td><td>TP-05.13</td><td>Iskanje obstoječega uporabnika (<code>findUnique</code> po <code>username</code>) loči velike in male črke. <code>NINA</code> se verjetno ustvari kot nov račun poleg <code>nina</code>. Po dodanem pravilu S3-3 bi različica <strong>padla</strong>.</td><td>sum napake</td></tr>
+<tr><td>U-6</td><td>TP-06.06</td><td>Vmesnik ne preveri zgornje meje gesla (200). Uporabnik izve za napako šele po oddaji. Seznam zahtev naj vsebuje tudi »Največ 200 znakov«.</td><td>izboljšava</td></tr>
+</tbody>
+</table>
+<h2>6. Povzetek pokritosti</h2>
+<table>
+<thead>
+<tr><th>Testni primer</th><th>EK (V / N)</th><th>MV</th><th>Izvedbene različice</th><th>Številski vnos</th></tr>
+</thead>
+<tbody>
+<tr><td>TP-01</td><td>22 (9 / 13)</td><td>14</td><td>30</td><td>številka naročila (dolžina), vrednost naročila (0,00–10 000,00)</td></tr>
+<tr><td>TP-05</td><td>15 (4 / 11)</td><td>18</td><td>27</td><td>nivo (1–5), dolžina imena (3–32, 1–80)</td></tr>
+<tr><td>TP-06</td><td>12 (3 / 9)</td><td>6</td><td>16</td><td>dolžina gesla (8–200)</td></tr>
+<tr><td><strong>Skupaj</strong></td><td><strong>49</strong></td><td><strong>38</strong></td><td><strong>73</strong></td><td></td></tr>
+</tbody>
+</table>
+<p>Vsaka ekvivalenčna kategorija in vsaka mejna vrednost je pokrita z vsaj eno izvedbeno različico. Neveljavne kategorije so testirane vsaka v svoji različici, da ena napaka ne skrije druge.</p>
+
+</body></html>
