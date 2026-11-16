@@ -1,0 +1,268 @@
+<title>Naloga 5 – razredi po testih</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: zavihki za tri testne primere; zgoraj razredi po poljih, spodaj testi z razredi, ki jim pripadajo. Klik poveže oboje. */
+:root{
+  --bg:#f6f7f5; --surface:#ffffff; --ink:#1b211e; --muted:#5d6862; --line:#dde2de;
+  --accent:#2f5d8a; --accent-soft:#e3ecf5;
+  --ok:#1f7a4d; --ok-soft:#e1f2e8; --warn:#9a6a00; --warn-soft:#fbf0d4; --bad:#b23b31; --bad-soft:#f8e2df;
+  --bnd:#6a4c9c; --bnd-soft:#ece6f6;
+  --hl:#fff2b8;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121614; --surface:#1a201d; --ink:#e6ebe8; --muted:#9aa6a0; --line:#2c3531;
+  --accent:#8db6e0; --accent-soft:#1e2c3a;
+  --ok:#6cc596; --ok-soft:#173327; --warn:#e3b54a; --warn-soft:#382d12; --bad:#ef8a80; --bad-soft:#3d1d1a;
+  --bnd:#b9a0e6; --bnd-soft:#2b2340; --hl:#3a3415; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121614; --surface:#1a201d; --ink:#e6ebe8; --muted:#9aa6a0; --line:#2c3531;
+  --accent:#8db6e0; --accent-soft:#1e2c3a;
+  --ok:#6cc596; --ok-soft:#173327; --warn:#e3b54a; --warn-soft:#382d12; --bad:#ef8a80; --bad-soft:#3d1d1a;
+  --bnd:#b9a0e6; --bnd-soft:#2b2340; --hl:#3a3415; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body)}
+.wrap{max-width:1100px;margin:0 auto;padding-block:28px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:22px}
+h1{font:750 clamp(26px,4vw,36px)/1.1 var(--f-display);margin:0;text-wrap:balance}
+h2{font:600 19px/1.2 var(--f-display);margin:0}
+.lead{color:var(--muted);margin:6px 0 0;max-width:68ch}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tab{font:600 14px var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:9px 14px;border-radius:8px;cursor:pointer;display:flex;gap:8px;align-items:baseline}
+.tab small{color:var(--muted);font-weight:400}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.tab[aria-selected="true"] small{color:var(--bg);opacity:.85}
+.tab:focus-visible,.chip:focus-visible,.cls:focus-visible,tr:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.spec{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:6px}
+.spec p{margin:0}
+.spec .t{font-weight:600}
+.spec code,.mono{font-family:var(--f-mono);font-size:13px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:13px;align-items:center}
+.pill{display:inline-block;font:600 11px/1 var(--f-body);letter-spacing:.04em;padding:4px 6px;border-radius:4px;text-transform:uppercase}
+.V{background:var(--ok-soft);color:var(--ok)} .N{background:var(--bad-soft);color:var(--bad)}
+.r-ok{background:var(--ok-soft);color:var(--ok)} .r-warn{background:var(--warn-soft);color:var(--warn)} .r-bad{background:var(--bad-soft);color:var(--bad)}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.field{display:grid;gap:8px;align-content:start;min-width:0}
+.field h3{margin:0;font:600 12px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.cls{display:grid;grid-template-columns:auto auto 1fr;gap:4px 10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 11px;cursor:pointer;text-align:left;color:inherit;font:inherit;width:100%}
+.cls .id{font:500 13px var(--f-mono)}
+.cls .name{min-width:0}
+.cls .rep{grid-column:2/-1;color:var(--muted);font-size:13px}
+.cls .runs{grid-column:1/-1;display:flex;gap:4px;flex-wrap:wrap}
+.cls .runs span{font:12px var(--f-mono);color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+.cls.on{border-color:var(--accent);background:var(--accent-soft)}
+.cls.dim,tr.dim{opacity:.38}
+.tblbox{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:760px}
+th,td{padding:9px 10px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+th{font:600 12px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--surface);position:sticky;top:0}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--accent-soft)}
+tr.on{background:var(--hl)!important}
+td.num{font:500 13px var(--f-mono);white-space:nowrap}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font:500 12px var(--f-mono);border-radius:5px;padding:3px 7px;border:1px solid transparent;white-space:nowrap}
+.chip.V{border-color:var(--ok)} .chip.N{border-color:var(--bad)}
+.chip.b{background:var(--bnd-soft);color:var(--bnd);border-color:var(--bnd)}
+.chip span{font-family:var(--f-body);font-weight:400}
+.out{color:var(--muted);font-size:13px}
+.summary{display:flex;gap:10px;flex-wrap:wrap;font-size:14px}
+.hint{color:var(--muted);font-size:13px;margin:0}
+.reset{font:500 13px var(--f-body);background:none;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:5px 10px;cursor:pointer}
+.reset[hidden]{display:none}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+@media (prefers-reduced-motion:no-preference){.cls,tr{transition:opacity .15s,background-color .15s}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Kateri razredi pripadajo kateremu testu</h1>
+    <p class="lead">Naloga 5, HelpDesk. Za vsak izveden vnos so prikazani ekvivalenčni razredi, ki jih pokrije, in mejna vrednost, če jo testira. Klikni test, da označiš njegove razrede, ali razred, da vidiš teste, ki ga pokrijejo.</p>
+  </header>
+
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+
+  <section class="spec" id="spec"></section>
+
+  <section style="display:grid;gap:10px">
+    <div class="row"><h2>Ekvivalenčni razredi</h2><button class="reset" id="reset" hidden>Počisti izbiro</button></div>
+    <div class="legend"><span><span class="pill V">V</span> veljaven razred</span><span><span class="pill N">N</span> neveljaven razred</span><span><span class="chip b">meja</span> mejna vrednost</span></div>
+    <div class="fields" id="fields"></div>
+  </section>
+
+  <section style="display:grid;gap:10px">
+    <div class="row"><h2>Testi in njihovi razredi</h2><div class="summary" id="summary"></div></div>
+    <div class="tblbox"><table>
+      <thead><tr><th>#</th><th>Vnos</th><th>Razredi</th><th>Meja</th><th>Pričakovano</th><th>Dejansko</th><th>Izid</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div>
+    <p class="hint">Vir: docs/Naloga5-FormalniPristopi.md. Vnosi so izvedeni 15. 11. 2026 v lokalni aplikaciji na sveži bazi.</p>
+  </section>
+</div>
+
+<script>
+const TP = {
+  "tp-01": {
+    title:"TP-01", sub:"Odpiranje ticketa",
+    spec:[
+      ["Številka naročila","obvezna, 3–10 števk, neobvezen # spredaj, brez črk [dopolnjeno]"],
+      ["Količina (kos)","celo število 1–9999, drugače zavrnjeno s sporočilom [dopolnjeno]"],
+      ["Znesek","0,00–9.999,99 EUR, največ 2 decimalki [dopolnjeno]"]],
+    classes:[
+      ["E1","Številka naročila","3–10 števk","V","50002"],
+      ["E2","Številka naročila","prazno","N","(prazno)"],
+      ["E3","Številka naročila","manj kot 3 števke","N","7"],
+      ["E4","Številka naročila","več kot 10 števk","N","12345678901"],
+      ["E5","Številka naročila","črke ali drugi znaki","N","ABC-77"],
+      ["E6","Količina (kos)","celo število 1–9999","V","1"],
+      ["E7","Količina (kos)","0 ali negativno","N","-1"],
+      ["E8","Količina (kos)","nad 9999","N","10000"],
+      ["E9","Znesek","0,00–9.999,99","V","10"],
+      ["E10","Znesek","negativen","N","-0,01"],
+      ["E11","Znesek","nad 9.999,99","N","100000"],
+      ["E12","Znesek","nečiselni vnos","N","abc"]],
+    runs:[
+      ["1.1","50002 / 1 / 10",["E1","E6","E9"],"","ustvarjen","ustvarjen","ok"],
+      ["1.2","št. prazno",["E2"],"","zavrnjen, »obvezno«","brskalnik: »Izpolnite to polje«","ok"],
+      ["1.3","št. 12",["E3"],"št. spodnja · pod (2)","zavrnjen","ustvarjen","bad"],
+      ["1.4","št. 7",["E3"],"","zavrnjen","ustvarjen","bad"],
+      ["1.5","št. 123",["E1"],"št. spodnja · na (3)","ustvarjen","ustvarjen","ok"],
+      ["1.6","št. 1234567890",["E1"],"št. zgornja · na (10)","ustvarjen","ustvarjen","ok"],
+      ["1.7","št. 12345678901",["E4"],"št. zgornja · nad (11)","zavrnjen","ustvarjen","bad"],
+      ["1.8","št. ABC-77",["E5"],"","zavrnjen","ustvarjen","bad"],
+      ["1.9","kos 0",["E7"],"kos spodnja · pod","zavrnjen s sporočilom","ustvarjen, kos tiho 1","bad"],
+      ["1.10","kos -1",["E7"],"","zavrnjen s sporočilom","ustvarjen, kos 1","bad"],
+      ["1.11","kos 9999",["E6"],"kos zgornja · na","ustvarjen, 9999","ustvarjen, 9999","ok"],
+      ["1.12","kos 10000",["E8"],"kos zgornja · nad","zavrnjen s sporočilom","ustvarjen, kos 1000","bad"],
+      ["1.13","znesek -0,01",["E10"],"znesek spodnja · pod","zavrnjen s sporočilom","ustvarjen, znesek izbrisan","bad"],
+      ["1.14","znesek 0",["E9"],"znesek spodnja · na","ustvarjen, 0","ustvarjen, 0","ok"],
+      ["1.15","znesek 0,01",["E9"],"znesek spodnja · nad","ustvarjen, 0,01","ustvarjen, 0,01","ok"],
+      ["1.16","znesek 9999,99",["E9"],"znesek zgornja · na","ustvarjen","ustvarjen","ok"],
+      ["1.17","znesek 10000,00",["E11"],"znesek zgornja · nad","zavrnjen","ustvarjen (10000)","bad"],
+      ["1.18","znesek abc",["E12"],"","zavrnjen s sporočilom","ustvarjen, znesek izbrisan","bad"]]
+  },
+  "tp-05": {
+    title:"TP-05", sub:"Ustvarjanje uporabnika",
+    spec:[
+      ["Uporabniško ime","3–32 znakov, črke, številke in . _ -; edinstveno ne glede na velike in male črke [dopolnjeno]"],
+      ["Začetno geslo","8–200 znakov, vsaj ena velika, ena mala črka, številka in poseben znak (zgornja meja [dopolnjeno])"]],
+    classes:[
+      ["U1","Uporabniško ime","3–32 dovoljenih znakov","V","abc"],
+      ["U2","Uporabniško ime","manj kot 3 znaki","N","ab"],
+      ["U3","Uporabniško ime","več kot 32 znakov","N","33 × a"],
+      ["U4","Uporabniško ime","presledek","N","ana novak"],
+      ["U5","Uporabniško ime","nedovoljen znak","N","ana@kroj"],
+      ["U6","Uporabniško ime","že obstaja z drugimi velikimi črkami","N","Nina"],
+      ["G1","Začetno geslo","vsa pravila, 8–200 znakov","V","Abcdef1!"],
+      ["G2","Začetno geslo","prekratko","N","Abcde1!"],
+      ["G3","Začetno geslo","brez velike črke","N","abcdef1!"],
+      ["G4","Začetno geslo","brez male črke","N","ABCDEF1!"],
+      ["G5","Začetno geslo","brez številke","N","Abcdefg!"],
+      ["G6","Začetno geslo","brez posebnega znaka","N","Abcdefg1"],
+      ["G7","Začetno geslo","predolgo","N","201 znak"]],
+    runs:[
+      ["5.1","ime abc",["U1"],"ime spodnja · na (3)","ustvarjen","ustvarjen","ok"],
+      ["5.2","ime ab",["U2"],"ime spodnja · pod (2)","zavrnjen z razlogom","zavrnjen, splošno sporočilo brskalnika","warn"],
+      ["5.3","ime 32 × a",["U1"],"ime zgornja · na (32)","ustvarjen","ustvarjen","ok"],
+      ["5.4","ime 33 × a",["U3"],"ime zgornja · nad (33)","zavrnjen z razlogom","zavrnjen, splošno sporočilo","warn"],
+      ["5.5","ime ana novak",["U4"],"","zavrnjen z razlogom","zavrnjen, splošno sporočilo","warn"],
+      ["5.6","ime ana@kroj",["U5"],"","zavrnjen z razlogom","zavrnjen, splošno sporočilo","warn"],
+      ["5.7","ime Nina",["U6"],"","zavrnjen, »že zasedeno«","ustvarjen (nina in Nina)","bad"],
+      ["5.8","geslo Abcde1! (7)",["G2"],"geslo spodnja · pod (7)","zavrnjen","gumb »Ustvari« onemogočen","ok"],
+      ["5.9","geslo Abcdef1! (8)",["G1"],"geslo spodnja · na (8)","ustvarjen","ustvarjen","ok"],
+      ["5.10","geslo abcdef1!",["G3"],"","zavrnjen","gumb onemogočen","ok"],
+      ["5.11","geslo ABCDEF1!",["G4"],"","zavrnjen","gumb onemogočen","ok"],
+      ["5.12","geslo Abcdefg!",["G5"],"","zavrnjen","gumb onemogočen","ok"],
+      ["5.13","geslo Abcdefg1",["G6"],"","zavrnjen","gumb onemogočen","ok"],
+      ["5.14","geslo 200 znakov",["G1"],"geslo zgornja · na (200)","ustvarjen","ustvarjen","ok"],
+      ["5.15","geslo 201 znak",["G7"],"geslo zgornja · nad (201)","zavrnjen","»Geslo je predolgo.«","ok"]]
+  },
+  "tp-06": {
+    title:"TP-06", sub:"Prag nizke ocene",
+    spec:[
+      ["Prag »V pregled pod«","celo število 2–10, obvezno. Ocena je 1–10, prag 1 nima smisla [dopolnjeno]"]],
+    classes:[
+      ["P1","Prag","celo število 2–10","V","5"],
+      ["P2","Prag","pod 2 (tudi negativno)","N","-3"],
+      ["P3","Prag","nad 10","N","11"],
+      ["P4","Prag","decimalno število","N","5.5"],
+      ["P5","Prag","prazno","N","(prazno)"],
+      ["P6","Prag","nečiselni vnos","N","abc"]],
+    runs:[
+      ["6.1","5",["P1"],"","shrani 5","»Shranjeno«, 5","ok"],
+      ["6.2","1",["P2"],"spodnja · pod","zavrne","»Vpiši celo število od 2 do 10.«","ok"],
+      ["6.3","2",["P1"],"spodnja · na","shrani 2","»Shranjeno«, 2","ok"],
+      ["6.4","10",["P1"],"zgornja · na","shrani 10","»Shranjeno«, 10","ok"],
+      ["6.5","11",["P3"],"zgornja · nad","zavrne","»Vpiši celo število od 2 do 10.«","ok"],
+      ["6.6","-3",["P2"],"","zavrne","brskalnik: »… večja od 2 ali enaka.«","ok"],
+      ["6.7","5.5",["P4"],"","zavrne","brskalnik: najbližji 5 in 6","ok"],
+      ["6.8","(prazno)",["P5"],"","zavrne","»Izpolnite to polje«","ok"],
+      ["6.9","abc",["P6"],"","zavrne","»Vpiši celo število od 2 do 10.«","ok"]]
+  }
+};
+const RES = {ok:["uspel","r-ok"],warn:["delno","r-warn"],bad:["padel","r-bad"]};
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let cur = "tp-01", sel = null; // sel = {type:"run"|"cls", id}
+
+function renderTabs(){
+  $("tabs").innerHTML = Object.entries(TP).map(([k,t]) =>
+    `<button class="tab" role="tab" id="tab-${k}" aria-selected="${k===cur}" data-k="${k}">${t.title}<small>${t.sub}</small></button>`).join("");
+  $("tabs").querySelectorAll(".tab").forEach(b => b.onclick = () => { location.hash = b.dataset.k; });
+}
+function render(){
+  const t = TP[cur], cmap = Object.fromEntries(t.classes.map(c=>[c[0],c]));
+  renderTabs();
+  $("spec").innerHTML = `<p class="t">Specifikacija vnosov · ${t.title} ${esc(t.sub)}</p>` +
+    t.spec.map(([f,r]) => `<p><b>${esc(f)}:</b> ${esc(r)}</p>`).join("");
+  const byField = {};
+  t.classes.forEach(c => (byField[c[1]] ??= []).push(c));
+  $("fields").innerHTML = Object.entries(byField).map(([f,cs]) =>
+    `<div class="field"><h3>${esc(f)}</h3>` + cs.map(c => {
+      const runs = t.runs.filter(r => r[2].includes(c[0])).map(r=>r[0]);
+      return `<button class="cls" data-c="${c[0]}"><span class="id">${c[0]}</span><span class="pill ${c[3]}">${c[3]}</span><span class="name">${esc(c[2])}</span>
+        <span class="rep">predstavnik <span class="mono">${esc(c[4])}</span></span>
+        <span class="runs">${runs.length ? runs.map(r=>`<span>${r}</span>`).join("") : '<span>ni testa</span>'}</span></button>`;
+    }).join("") + `</div>`).join("");
+  $("rows").innerHTML = t.runs.map(r => {
+    const [lab,cls] = RES[r[6]];
+    return `<tr data-r="${r[0]}" tabindex="0"><td class="num">${r[0]}</td><td class="mono">${esc(r[1])}</td>
+      <td><div class="chips">${r[2].map(id => `<span class="chip ${cmap[id][3]}">${id} <span>${esc(cmap[id][2])}</span></span>`).join("")}</div></td>
+      <td>${r[3] ? `<span class="chip b">${esc(r[3])}</span>` : '<span class="out">—</span>'}</td>
+      <td class="out">${esc(r[4])}</td><td>${esc(r[5])}</td><td><span class="pill ${cls}">${lab}</span></td></tr>`;
+  }).join("");
+  const n = k => t.runs.filter(r=>r[6]===k).length;
+  $("summary").innerHTML = `<span>${t.runs.length} testov</span><span class="pill r-ok">${n("ok")} uspel</span>` +
+    (n("warn")?`<span class="pill r-warn">${n("warn")} delno</span>`:"") + (n("bad")?`<span class="pill r-bad">${n("bad")} padel</span>`:"");
+  document.querySelectorAll(".cls").forEach(b => b.onclick = () => toggle({type:"cls",id:b.dataset.c}));
+  document.querySelectorAll("#rows tr").forEach(tr => {
+    tr.onclick = () => toggle({type:"run",id:tr.dataset.r});
+    tr.onkeydown = e => { if(e.key==="Enter"||e.key===" "){e.preventDefault();tr.click();} };
+  });
+  paint();
+}
+function toggle(s){ sel = (sel && sel.type===s.type && sel.id===s.id) ? null : s; paint(); }
+function paint(){
+  const t = TP[cur];
+  let runs = null, cls = null;
+  if(sel?.type==="run"){ const r = t.runs.find(x=>x[0]===sel.id); runs=[r[0]]; cls=r[2]; }
+  if(sel?.type==="cls"){ cls=[sel.id]; runs=t.runs.filter(r=>r[2].includes(sel.id)).map(r=>r[0]); }
+  document.querySelectorAll(".cls").forEach(b => {
+    b.classList.toggle("on", !!cls && cls.includes(b.dataset.c));
+    b.classList.toggle("dim", !!cls && !cls.includes(b.dataset.c));
+  });
+  document.querySelectorAll("#rows tr").forEach(tr => {
+    tr.classList.toggle("on", !!runs && runs.includes(tr.dataset.r));
+    tr.classList.toggle("dim", !!runs && !runs.includes(tr.dataset.r));
+  });
+  $("reset").hidden = !sel;
+}
+$("reset").onclick = () => { sel=null; paint(); };
+function fromHash(){ const h=location.hash.slice(1); cur = TP[h] ? h : "tp-01"; sel=null; render(); }
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
