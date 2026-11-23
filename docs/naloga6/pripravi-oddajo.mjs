@@ -6,6 +6,7 @@ const docs = [
   ["Testni-plan-HelpDesk", "Testni plan – HelpDesk 1.1"],
   ["Utemeljitev-postavk", "Utemeljitev postavk testnega plana"],
   ["Povzetek-sprememb-osnutka", "Povzetek sprememb osnutka"],
+  ["agent_threads", "Pogovori z agentom"],
 ];
 
 for (const [name, title] of docs) {

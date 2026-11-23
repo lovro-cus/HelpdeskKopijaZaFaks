@@ -13,37 +13,43 @@ blockquote{border-left:3px solid #999;margin:8px 0;padding:2px 12px;color:#444}
 @media print{body{margin:0;max-width:none}tr,pre{break-inside:avoid}}
 </style></head><body>
 <h1>Povzetek sprememb osnutka agenta</h1>
-<blockquote>
-<p><strong>Za izpolniti.</strong> Navodilo zahteva, da osnutek agenta kritično predelate in zapišete, kaj ste spremenili in zakaj. To lahko naredite samo vi. Spodaj so mesta, kjer je agent naredil predpostavko ali odločitev, ki jo morate preveriti.</p>
-</blockquote>
-<h2>Predpostavke agenta, ki jih preverite</h2>
+<p>Osnutek testnega plana je pripravil agent Claude Code (22. 11. 2026). Osnutek sem pregledal 23. 11. 2026. Vsako predpostavko agenta sem preveril v kodi in v dokumentih nalog 2–5. Spodaj je za vsako predpostavko moja odločitev in seznam sprememb v planu.</p>
+<h2>Predpostavke agenta in moje odločitve</h2>
 <table>
 <thead>
-<tr><th>#</th><th>Mesto v planu</th><th>Predpostavka</th><th>Vaša odločitev</th></tr>
+<tr><th>#</th><th>Mesto v planu</th><th>Predpostavka agenta</th><th>Kaj sem preveril</th><th>Moja odločitev</th></tr>
 </thead>
 <tbody>
-<tr><td>1</td><td>1.1</td><td>Različica 1.1 vsebuje točno SP-1–SP-7. Ali je obseg pravi? Ali je kaj preveč (npr. SP-6)?</td><td></td></tr>
-<tr><td>2</td><td>1.1, SP-5</td><td>Pravilo za številko naročila (1–40 znakov ali 3–10 števk, <code>looksLikeOrderNumber</code>) ni odločeno.</td><td></td></tr>
-<tr><td>3</td><td>glava, 8</td><td>Skupina ima dva člana; vloge Študent A / Študent B. Vpišite imena in pravo razdelitev.</td><td></td></tr>
-<tr><td>4</td><td>8</td><td>Roki 25. 11. – 9. 12. 2026 so predlog agenta.</td><td></td></tr>
-<tr><td>5</td><td>3</td><td>Mobilni prikaz in drugi brskalniki so izključeni. Ali jih podpora res ne uporablja?</td><td></td></tr>
-<tr><td>6</td><td>4.2, R-7</td><td>Vseh 73 različic EK/MV avtomatiziramo. Mogoče je dovolj izbor (npr. samo meje in [dodano] različice).</td><td></td></tr>
-<tr><td>7</td><td>5.2</td><td>Izstopno merilo zahteva tudi uspešen lokalni zagon. Ali je to izvedljivo za vse člane (Windows, Chrome)?</td><td></td></tr>
-<tr><td>8</td><td>4.1</td><td>Raziskovalno testiranje traja 60 min.</td><td></td></tr>
-<tr><td>9</td><td>10</td><td>Stopnje resnosti in primeri.</td><td></td></tr>
+<tr><td>1</td><td>1.1</td><td>Različica 1.1 vsebuje SP-1–SP-7.</td><td>Vsaka sprememba ima vir v nalogi 2, 4 ali 5. SP-6 je samo besedilo, a ga TP-04 že pokriva (en korak več). Mesto v kodi pri SP-6 je bilo napačno: gumb »Pošlji kot Ana« je v <code>src/components/InboxWorkspace.tsx</code>, ne v <code>dictionaries.ts</code>. Izvor NAP-01 (SP-1) v 2. nalogi ni potrjen, osnutek pa ga navaja kot gotovega.</td><td>Obseg obdržim. SP-6 ostane, ker je poceni. Popravim mesto v kodi za SP-6 in SP-1 označim kot »verjetno«.</td></tr>
+<tr><td>2</td><td>1.1, SP-5</td><td>Pravilo za številko naročila ni odločeno; plan zato blokira 4 različice (vstopno merilo, R-9).</td><td><code>createIssue</code> sprejme 1–40 znakov. <code>looksLikeOrderNumber</code> (<code>src/lib/order-number.ts</code>, ne <code>issues.ts</code>) se uporablja samo v iskanju, da ponudi »Odpri ticket«. Seme vsebuje številke z vodilno ničlo (<code>0912</code>, <code>0934</code> …).</td><td>Pravili si ne nasprotujeta, ker imata različen namen. Velja 1–40 znakov; <code>0912</code> ≠ <code>912</code>. Koda se ne spremeni, odločitev zapišem v komentar. Odstranim vstopno merilo in R-9; različice TP-01.10, .11, .17, .18 ostanejo, kot so.</td></tr>
+<tr><td>3</td><td>glava, 8</td><td>Skupina ima dva člana, vloge Študent A / Študent B.</td><td>Razdelitev je smiselna: lastnik HelpDeska piše teste, drugi član jih pregleda in izvede mutacije (ločitev avtorja in preveritelja).</td><td>Vloge obdržim. <strong>Imena vpišemo pred oddajo.</strong></td></tr>
+<tr><td>4</td><td>8</td><td>Roki 25. 11. – 9. 12. 2026.</td><td>Vrstni red je pravilen: odločitev SP-5 → koda in testi → pregled → mutacije → poročilo. Plan opisuje naslednjo različico, zato roki niso vezani na rok oddaje te naloge.</td><td>Roke obdržim.</td></tr>
+<tr><td>5</td><td>3</td><td>Mobilni prikaz in drugi brskalniki so izključeni, ker podpora uporablja namizni Chrome.</td><td>Tega ni nikjer v nalogah 2–5; v 2. nalogi je samo zapisano, da smo testirali namizni Chrome. Koda pa ima mobilno postavitev (<code>globals.css</code>: <code>@media (max-width: 639px)</code>, <code>hover: none</code>).</td><td>Firefox in WebKit ostaneta izključena. Mobilnega prikaza ne izključim v celoti: dodam ročni pregled (sklop C v raziskovalnem testiranju). Razlog v tabeli zapišem pošteno (»ni preverjeno«).</td></tr>
+<tr><td>6</td><td>4.2, R-7</td><td>Vseh 73 različic teče ob vsakem pushu.</td><td>Vsaka različica potrebuje prijavo in oddajo obrazca. 73 različic lahko preseže cilj 10 min.</td><td>Avtomatiziramo vseh 73, ampak ob pushu teče samo izbor <code>@hitro</code> (vse MV, vse [dodano], ena veljavna na funkcionalnost). Vseh 73 teče ob PR na <code>main</code> (to omogoči SP-7).</td></tr>
+<tr><td>7</td><td>5.2</td><td>Lokalni zagon mora uspeti (implicitno pri vseh članih).</td><td>Študent B ima nameščen svoj projekt (eNormativi), HelpDeska pa ne. NAP-01 je viden samo v <code>next dev</code>.</td><td>Lokalni zagon ostane obvezen, izvede ga Študent A (Windows 11, Chrome) in rezultat zapiše v poročilo.</td></tr>
+<tr><td>8</td><td>4.1</td><td>Raziskovalno testiranje traja 60 min.</td><td>60 min brez cilja ne da primerljivega rezultata.</td><td>Čas obdržim, razdelim ga na 3 sklope po 20 min z namenom: A – vnos vrednosti (SP-2), B – uporabniki in geslo (SP-3, SP-4), C – mobilni prikaz.</td></tr>
+<tr><td>9</td><td>10</td><td>Stopnje resnosti in primeri.</td><td>Primeri so iz naših nalog. Manjkala sta U-5 in U-6. Pravilo »zapremo samo z avtomatiziranim testom« ne deluje za napake postavitve.</td><td>Stopnje obdržim. U-5 dodam pod srednja, U-6 pod nizka. Dodam izjemo: napako postavitve zapremo s posnetkom pred popravkom in po njem.</td></tr>
 </tbody>
 </table>
-<h2>Spremembe</h2>
+<h2>Spremembe v planu</h2>
 <table>
 <thead>
 <tr><th>#</th><th>Kaj sem spremenil</th><th>Zakaj</th></tr>
 </thead>
 <tbody>
-<tr><td>1</td><td></td><td></td></tr>
-<tr><td>2</td><td></td><td></td></tr>
+<tr><td>1</td><td>SP-5: »odločitev je odprta« → zapisana odločitev (1–40 znakov, <code>0912</code> ≠ <code>912</code>, brez spremembe kode); popravljeno mesto v kodi</td><td>Agent je dve funkciji z različnim namenom razumel kot nasprotje. Seme dokazuje, da vodilne ničle obstajajo.</td></tr>
+<tr><td>2</td><td>Odstranjeno vstopno merilo o SP-5 in tveganje R-9; posodobljena vrstica SP-5 v sledljivosti in naloga 1 v razporedu</td><td>Z odločitvijo blokade ni več.</td></tr>
+<tr><td>3</td><td>SP-6: mesto v kodi <code>InboxWorkspace.tsx</code> in ključ <code>thread.customerEmail.sent</code></td><td>Agent je navedel napačno datoteko.</td></tr>
+<tr><td>4</td><td>SP-1: mesto v kodi označeno kot »verjetno«</td><td>V 2. nalogi izvor NAP-01 ni bil potrjen.</td></tr>
+<tr><td>5</td><td>Poglavje 3: mobilni prikaz ločen od Firefoxa/WebKita, razlog popravljen</td><td>Trditev »podpora uporablja namizni Chrome« ni preverjena; aplikacija ima mobilno postavitev.</td></tr>
+<tr><td>6</td><td>4.1, 4.2, R-7: oznaka <code>@hitro</code> ob pushu, vseh 73 ob PR na <code>main</code></td><td>Hiter cevovod ob pushu, celoten nabor pred združitvijo.</td></tr>
+<tr><td>7</td><td>4.1, razpored: raziskovalno testiranje v sklopih A–C</td><td>Vsak sklop ima namen in je vezan na spremembo v 1.1.</td></tr>
+<tr><td>8</td><td>5.2, R-1: lokalni zagon izvede Študent A in ga zapiše v poročilo</td><td>Zahteva mora biti izvedljiva; drugi član nima HelpDeska.</td></tr>
+<tr><td>9</td><td>10: U-5 (srednja), U-6 (nizka), izjema za napake postavitve</td><td>Primeri pokrijejo vse spremembe; pravilo zapiranja deluje tudi za sklop C.</td></tr>
+<tr><td>10</td><td>Glava: različica plana 1.1, datum predelave</td><td>Iz glave je vidno, da plan ni več samo osnutek.</td></tr>
 </tbody>
 </table>
 <h2>Pogovor z agentom</h2>
-<p>Izvoz ali povezava na deljen pogovor: [vstavi]</p>
+<p>Izvoz obeh pogovorov z agentom: <a href="agent_threads.md">agent_threads.md</a> (HTML: <code>agent_threads.html</code>).</p>
 
 </body></html>

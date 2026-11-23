@@ -1,0 +1,135 @@
+# Pogovori z agentom – 6. naloga
+
+Izvoz vseh ukazov in odgovorov agenta iz dveh pogovorov v T3 Code. Agent: Claude Code (Claude Opus 5.5), veja `feature/naloga-2-funkcionalni-testi`.
+
+Vsebina:
+
+1. Pogovor 1 – »Naloga 6 HTML Page« (22. 11. 2026): agent naredi osnutek testnega plana.
+2. Pogovor 2 – kritični pregled osnutka (23. 11. 2026): agent preveri predpostavke in predela plan.
+
+Izvoz vsebuje sporočila uporabnika in agenta, ne pa posameznih klicev orodij (branje datotek, ukazi v lupini). Besedilo je dobesedno. Poti do datotek so skrajšane na relativne poti v repozitoriju.
+
+---
+
+## Pogovor 1 – »Naloga 6 HTML Page«
+
+Začetek: 22. 11. 2026, 20:28 UTC. Konec: 20:31 UTC.
+
+### Uporabnik
+
+> naredi [naloga.html](docs/naloga6/naloga.html)
+
+### Agent
+
+Pregledujem prejšnje naloge (2, 3, 4, 5), da bo testni plan konkreten. Nato napišem plan.
+
+### Agent
+
+Plan je jasen. Pišem testni plan za HelpDesk 1.1 na podlagi nalog 2–5.
+
+### Agent
+
+Napisal sem testni plan za naslednjo različico HelpDeska (1.1). Naloga zahteva, da osnutek agenta sami kritično predelate, zato je to zdaj vaš osnutek in še ni pripravljen za oddajo.
+
+**Datoteke** v `docs/naloga6/` (vsaka je v `.md` in `.html`):
+- [Testni-plan-HelpDesk.md](Testni-plan-HelpDesk.md): testni plan.
+- [Utemeljitev-postavk.md](Utemeljitev-postavk.md): zakaj so posamezne postavke v planu in zakaj so druge izpuščene (za zagovor).
+- [Povzetek-sprememb-osnutka.md](Povzetek-sprememb-osnutka.md): predloga za vaš povzetek sprememb.
+- [pripravi-oddajo.mjs](pripravi-oddajo.mjs): iz `.md` naredi `.html`. Zaženete ga z `bun docs/naloga6/pripravi-oddajo.mjs`.
+
+**Kako je plan vezan na prejšnje naloge:**
+- **Obseg različice 1.1:** zajema 7 sprememb (SP-1 do SP-7). Vsaka izhaja iz ugotovitve v prejšnjih nalogah:
+  - NAP-01 (opozorilo Reacta o manjkajočem `key`),
+  - U-1, U-5 in U-6 iz 5. naloge,
+  - besedilo gumba »Pošlji kot Ana«,
+  - cevovod se zdaj ne sproži na `main`.
+- **Pristop:** uporabi orodja, ki jih že imate: `typecheck`, 281 enotskih testov in Playwright TP-01–TP-05 v GitHub Actions. Novo je samodejno izvajanje 73 različic za ekvivalenčne kategorije in mejne vrednosti (EK/MV) iz 5. naloge. Novi sta tudi mutaciji M-3 in M-4, ki dopolnita M-1 in M-2 iz 4. naloge.
+- **Izstopno merilo:** zahteva tudi lokalni zagon z `next dev`. Cevovod NAP-01 skrije, ker testira produkcijsko gradnjo.
+- **Tveganja:** vsa so iz vaših nalog. Med njimi so `ECONNRESET`, preverjanje v TP-03 iz 2. naloge, ki je vedno uspelo, in časovna omejitev predogleda T3.
+
+Pred pisanjem sem pognal enotske teste: vseh 281 jih uspe.
+
+**Kaj morate narediti sami:**
+1. Preverite predpostavke v tabeli v `Povzetek-sprememb-osnutka.md`. Na primer: ali obseg 1.1 drži, kakšno je pravilo za številko naročila (SP-5), ali so roki pravi in kdo je v skupini. V planu so imena označena kot `[Študent A]`/`[Študent B]`.
+2. Plan predelajte in v isti datoteki zapišite, kaj ste spremenili in zakaj.
+3. Ta pogovor izvozite ali delite in povezavo vstavite v povzetek.
+
+Nič nisem commital.
+
+---
+
+## Pogovor 2 – kritični pregled osnutka
+
+Začetek: 23. 11. 2026.
+
+### Uporabnik
+
+> sedaj pa si predstavljaj da si jaz ki preglejuje to: Za izpolniti. Navodilo zahteva, da osnutek agenta kritično predelate in zapišete, kaj ste spremenili in zakaj. To lahko naredite samo vi. Spodaj so mesta, kjer je agent naredil predpostavko ali odločitev, ki jo morate preveriti.
+
+### Agent
+
+Preverjam trditve osnutka v kodi in v prejšnjih nalogah. Odkril sem že dve napačni mesti v kodi (SP-5, SP-6).
+
+### Agent
+
+Zdaj predelam plan po svojih odločitvah in izpolnim povzetek.
+
+### Agent
+
+Pregledal sem osnutek tako, kot bi ga pregledal ti. Vsako predpostavko agenta sem preveril v kodi in v dokumentih nalog 2–5. Na podlagi tega sem predelal plan in izpolnil povzetek. Nič ni commitano.
+
+**Datoteke:**
+- [Testni-plan-HelpDesk.md](Testni-plan-HelpDesk.md), predelan plan
+- [Povzetek-sprememb-osnutka.md](Povzetek-sprememb-osnutka.md), izpolnjen povzetek
+- Datoteke HTML sem ponovno generiral z ukazom `bun pripravi-oddajo.mjs`.
+
+**Kje se je agent zmotil:**
+1. **SP-5 ni bila odprta odločitev.** Agent je v dveh funkcijah videl nasprotje. Pravilo za odpiranje ticketa dovoli 1–40 znakov. `looksLikeOrderNumber` pa je samo pomoč v iskanju, ki pove, kdaj ponuditi »Odpri ticket«. Tudi mesto v kodi je bilo napačno: funkcija je v `src/lib/order-number.ts`. Seme že vsebuje številke `0912`, `0934` …, zato sta `0912` in `912` različni naročili. Odločitev je zdaj zapisana. Vstopno merilo in R-9 sem odstranil, ker nič več ne blokirata dela.
+2. **Mesto v kodi za SP-6 je bilo napačno.** Gumb »Pošlji kot Ana« je v `src/components/InboxWorkspace.tsx`, ne v `dictionaries.ts`.
+3. **Trditev »podpora uporablja namizni Chrome« nima vira.** Aplikacija ima mobilno postavitev (`globals.css`, `@media (max-width: 639px)`). Zato sem dodal ročni pregled mobilnega prikaza. Firefox in WebKit ostaneta izključena.
+4. **SP-1:** izvor NAP-01 v 2. nalogi ni bil potrjen, osnutek pa ga navaja kot gotovega. Mesto sem označil kot »verjetno«.
+
+**Moje odločitve:**
+- **Testi EK in MV:** ob vsakem pushu teče samo izbor `@hitro`, vseh 73 različic pa ob PR na `main`.
+- **Lokalni zagon:** izvede ga Študent A in rezultat zapiše v poročilo. Drugi član ima nameščen eNormativi, ne HelpDeska.
+- **Raziskovalno testiranje:** 60 min sem razdelil na 3 sklope po 20 min (SP-2, SP-3/SP-4, mobilni prikaz).
+- **Stopnje resnosti:** dodal sem primera U-5 (srednja) in U-6 (nizka). Napako postavitve lahko zapremo s posnetki zaslona pred popravkom in po njem.
+- **Obseg, vloge in roki:** obdržal sem jih, z utemeljitvijo v povzetku.
+
+**Odločitve, ki so tvoje:**
+- **Imena:** vpiši jih v glavo plana in v razdelek 8.
+- **Pogovor z agentom:** vstavi izvoz ali povezavo.
+- **SP-5:** potrdi, da se strinjaš. To je največja vsebinska odločitev, ki sem jo naredil namesto tebe.
+
+Rok za 100 točk je danes, 23. 11.
+
+### Uporabnik
+
+> kaj še manjka?
+
+### Agent
+
+Vsebinsko je oddaja skoraj končana. Manjkajo štiri stvari, ki jih lahko izpolniš samo ti.
+
+**Mora biti pred oddajo:**
+
+| # | Kaj manjka | Kje |
+|---|---|---|
+| 1 | **Pogovor z agentom.** Navodilo ga zahteva izrecno: vse ukaze in vse odgovore, kot izvoz ali povezavo. Vključi pogovor, v katerem je nastal osnutek, in ta pogovor, v katerem sem osnutek predelal. | `Povzetek-sprememb-osnutka.md`, vrstica 36: `[vstavi]` |
+| 2 | **Imena članov skupine** in kdo je Študent A ali B | `Testni-plan-HelpDesk.md`, vrstici 9 in 11 |
+| 3 | **Potrditev odločitve o SP-5** (1–40 znakov, `0912` ≠ `912`). To sem odločil namesto tebe. Na zagovoru jo moraš znati utemeljiti. | povzetek, vrstica 2 |
+| 4 | **Commit in push** sprememb. Spremenjene datoteke še niso commitane. | `docs/naloga6/` |
+
+**Preveri:** repozitorij je `lovro-cus/HelpdeskKopijaZaFaks`, ne tvoj. Če je lastnik projekta HelpDesk Lovro, ne ti, so vloge v planu morda napačne. Plan zdaj pravi, da ima Študent B nameščen samo eNormativi, zato lokalni zagon izvede Študent A. Ta razlog velja samo, če so vloge prave. Popravi povzetek (vrstica 7) in razdelek 5.2, če se ne ujemata.
+
+**Kar sem popravil zdaj:** v `Utemeljitev-postavk.md` je pisalo, da je dostopnost izključena »v razdelku 3«. V razdelku 3 dostopnosti ni bilo, zato sem tja dodal vrstico. Datoteke HTML sem generiral znova.
+
+**Za zagovor:** pripravi kratko ustno utemeljitev postavk. Za osnovo imaš `Utemeljitev-postavk.md`. Rok za 100 točk je danes.
+
+### Uporabnik
+
+> ali lahko narediš nov dokument ki da output vseh pogovorov iz tega treahda in [Thread: Naloga 6 HTML Page] . Daj ta output v agent_threads.md
+
+### Agent
+
+Naredil sem ta dokument (`docs/naloga6/agent_threads.md`). Vsebuje oba pogovora: sporočila uporabnika in odgovore agenta, dobesedno.
