@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="sl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Utemeljitev postavk testnega plana</title>
+<style>
+body{font:14px/1.5 system-ui,Segoe UI,sans-serif;max-width:1100px;margin:24px auto;padding:0 16px;color:#1d1d1f;background:#fff}
+h1{font-size:24px}h2{font-size:19px;margin-top:32px;border-bottom:1px solid #ddd;padding-bottom:4px}h3{font-size:15px;margin-top:20px}
+table{border-collapse:collapse;width:100%;margin:8px 0 16px;font-size:12.5px}
+th,td{border:1px solid #ccc;padding:4px 6px;vertical-align:top;text-align:left}th{background:#f2f2f4}
+code{font-family:Consolas,monospace;background:#f4f4f6;padding:0 3px}
+pre{background:#f7f7f9;border:1px solid #e2e2e6;padding:10px;overflow-x:auto}pre code{background:none}
+blockquote{border-left:3px solid #999;margin:8px 0;padding:2px 12px;color:#444}
+@media print{body{margin:0;max-width:none}tr,pre{break-inside:avoid}}
+</style></head><body>
+<h1>Utemeljitev postavk testnega plana</h1>
+<p>Postavke smo izbrali po vzoru IEEE 829 / ISO/IEC/IEEE 29119-3. Vključili smo samo tiste, ki pri HelpDesku vplivajo na odločitev, kaj testiramo in kdaj je različica 1.1 pripravljena.</p>
+<h2>Vključene postavke</h2>
+<table>
+<thead>
+<tr><th>Postavka</th><th>Razdelek</th><th>Zakaj je vključena</th></tr>
+</thead>
+<tbody>
+<tr><td>Identifikacija plana</td><td>glava</td><td>Plan bo imel več različic (osnutek agenta, predelava). Brez oznake in izhodiščnega commita ne vemo, na katero kodo se nanaša.</td></tr>
+<tr><td>Testni element in spremembe</td><td>1, 1.1</td><td>Plan opisuje <em>naslednjo</em> različico. Spremembe SP-1–SP-7 izhajajo iz napak in ugotovitev nalog 2, 4 in 5, zato določajo obseg.</td></tr>
+<tr><td>Funkcionalnosti za testiranje</td><td>2</td><td>Pokaže, da testiramo samo funkcionalnosti, ki jih 1.1 spremeni, plus regresijo ključnih tokov.</td></tr>
+<tr><td>Funkcionalnosti, ki jih ne testiramo</td><td>3</td><td>Izrecno izpuščanje prepreči napačno pričakovanje (npr. da smo testirali pošiljanje prave pošte, ki je v kopiji ni).</td></tr>
+<tr><td>Pristop</td><td>4</td><td>Največji del plana. Določi, katero orodje iz prejšnjih nalog pokrije katero raven in kaj je novega (avtomatizacija EK/MV iz 5. naloge, nove mutacije).</td></tr>
+<tr><td>Vstopna, izstopna merila, prekinitev</td><td>5</td><td>V 2. in 4. nalogi je bil rezultat »funkcionalno uspešno, test neuspešen« (NAP-01). Brez izrecnega merila (lokalni zagon je obvezen) bi tako stanje lahko spregledali.</td></tr>
+<tr><td>Testno okolje</td><td>6</td><td>Lokalni in CI zagon se razlikujeta (dev/produkcija, Chrome/Chromium, ponovitve). Ta razlika je skrila NAP-01 v cevovodu.</td></tr>
+<tr><td>Testni izdelki</td><td>7</td><td>Cevovod že ustvari poročila; plan pove, kje so in kdo pripravi ostalo.</td></tr>
+<tr><td>Naloge, odgovornosti, razpored</td><td>8</td><td>Skupinsko delo in rok zagovora. Ločimo avtorja in pregledovalca testov.</td></tr>
+<tr><td>Tveganja</td><td>9</td><td>Vsa tveganja so iz dejanskih izkušenj (NAP-01, ECONNRESET, test, ki vedno uspe, časovna omejitev predogleda T3).</td></tr>
+<tr><td>Upravljanje napak</td><td>10</td><td>Oblika NAP-01 iz 2. naloge se je obnesla; dodali smo stopnje resnosti in pravilo, da napako zapre šele test.</td></tr>
+<tr><td>Sledljivost</td><td>11</td><td>Povezuje spremembo → test → skripto → mutacijo. Nadaljuje matriko iz 2. naloge.</td></tr>
+</tbody>
+</table>
+<h2>Izpuščene postavke</h2>
+<table>
+<thead>
+<tr><th>Postavka</th><th>Zakaj je izpuščena</th></tr>
+</thead>
+<tbody>
+<tr><td>Potrebe po kadrih in usposabljanju</td><td>Skupina pozna orodja iz nalog 2–5 (Playwright, <code>node:test</code>, GitHub Actions).</td></tr>
+<tr><td>Proračun in stroški</td><td>Vsa orodja so brezplačna; GitHub Actions je za javni repozitorij brezplačen.</td></tr>
+<tr><td>Odobritve (podpisi)</td><td>Ni naročnika. Izdajo potrdi skupina v nalogi 8 razporeda.</td></tr>
+<tr><td>Ločen seznam predmetov testiranja (test items) po datotekah</td><td>Spremembe in mesta v kodi so že v tabeli 1.1; ločen seznam bi bil podvojen.</td></tr>
+<tr><td>Testiranje zmogljivosti, varnosti, dostopnosti</td><td>Utemeljeno v razdelku 3 kot zavestna izključitev, ne kot ločena postavka.</td></tr>
+<tr><td>Podroben opis testnih primerov</td><td>Primeri so v <code>docs/naloga2</code> in <code>docs/naloga5</code>; plan se nanje sklicuje.</td></tr>
+<tr><td>Slovar pojmov</td><td>Pojmi (EK, MV, ticket, nivo) so pojasnjeni v prejšnjih nalogah in pri ustni predstavitvi.</td></tr>
+</tbody>
+</table>
+
+</body></html>
